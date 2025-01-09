@@ -143,7 +143,8 @@ class JobBatchSpec(BaseModel):
                     inputfile=jobfile,
                     outputfile=os.path.join(
                         output_dir,
-                        os.path.basename(jobfile).removesuffix(".txt") + ".json",
+                        os.path.basename(jobfile).removesuffix(".txt")
+                        + f"{param:e}.json",
                     ),
                     start=param,
                     stop=param,
