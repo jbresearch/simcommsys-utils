@@ -281,6 +281,6 @@ class RunJobsSpec(BaseModel):
             executor_kwargs=d["executor"],
             jobs={
                 groupname: JobBatchSpec.from_dict(group)
-                for groupname, group in d["jobs"]
+                for groupname, group in d["jobs"].items()
             },
         )
