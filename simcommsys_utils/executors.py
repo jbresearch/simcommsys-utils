@@ -22,6 +22,7 @@ from typing import Literal
 import logging
 from multiprocessing import cpu_count
 import os
+from enum import Enum
 
 
 @dataclass
@@ -236,3 +237,28 @@ done
 
             logging.debug(cmd)
             subprocess.run(cmd, shell=True)
+
+
+class SimcommsysExecutorType(str, Enum):
+    """
+    String tag for Simcommsys executor
+
+    Update as more executors are added.
+    We subclass from str so we can use enum values as strings without
+    needing to access .value prop or call str():
+    https://stackoverflow.com/questions/58608361/string-based-enum-in-python
+    """
+
+    SLURM = "slurm"
+    LOCAL = "local"
+    MASTERSLAVE = "masterslave"
+
+    @property
+    def executor_type(self) -> type[SimcommsysExecutor]:
+        match self:
+            case self.SLURM:
+                return SlurmSimcommsysExecutor
+            case self.LOCAL:
+                return LocalSimcommsysExecutor
+            case self.MASTERSLAVE:
+                return MasterSlaveSimcommsysExecutor
