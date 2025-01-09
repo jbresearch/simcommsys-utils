@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Any
 from typing_extensions import Self
 import re
 import os
 from glob import glob
 
 from pydantic import BaseModel, model_validator
+from pydantic import ConfigDict
 
 from simcommsys_utils.executors import (
     SimcommsysExecutorType,
@@ -36,6 +38,8 @@ class JobBatchSpec(BaseModel):
     These are paired with executors in YAML config files to give
     complete way of running jobs
     """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # Absolute path of the config file from which this job batch was parsed
     config_dir: str
@@ -76,7 +80,7 @@ class JobBatchSpec(BaseModel):
     simcommsys_tag: str
     # Specify type of Simcommsys binary to use, should be release|debug|profile
     simcommsys_type: str
-    executor_kwargs: dict[str, any]
+    executor_kwargs: dict[str, Any]
 
     @property
     def jobs(self) -> list[SimcommsysJob]:
@@ -159,7 +163,7 @@ class JobBatchSpec(BaseModel):
             ]
 
     @classmethod
-    def from_dict(cls, d: dict[str, any]) -> Self:
+    def from_dict(cls, d: dict[str, Any]) -> Self:
         """
         Parse a JobBatchSpec object from a dict
 
@@ -250,8 +254,10 @@ class RunJobsSpec(BaseModel):
     This is parsed from a YAML file
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     executor_type: SimcommsysExecutorType
-    executor_kwargs: dict[str, any]
+    executor_kwargs: dict[str, Any]
     jobs: dict[str, JobBatchSpec]
 
     @property
@@ -262,7 +268,7 @@ class RunJobsSpec(BaseModel):
         return self.executor_type.executor_type(**self.executor_kwargs)
 
     @classmethod
-    def from_dict(cls, d: dict[str, any]) -> Self:
+    def from_dict(cls, d: dict[str, Any]) -> Self:
         """
         Parse a RunJobSpec object from a dict
 
