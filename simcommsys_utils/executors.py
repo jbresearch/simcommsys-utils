@@ -121,8 +121,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --cpus-per-task=1 \
                         --mem-per-cpu={memlimit_gb}G \
                         --time={timeout_mins} \
-                        --output={job.name}.out \
-                        --error={job.name}.err \
+                        --output={os.path.basename(job.outputfile).removesuffix('.json')}.out \
+                        --error={os.path.basename(job.outputfile).removesuffix('.json')}.err \
                         --account={self.account} \
                         --mail-type=all"
             if needs_gpu:
