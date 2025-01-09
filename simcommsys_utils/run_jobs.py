@@ -280,7 +280,9 @@ class RunJobsSpec(BaseModel):
             # remaining elements in executor dict passed as args to executor constructor
             executor_kwargs=d["executor"],
             jobs={
-                groupname: JobBatchSpec.from_dict(group)
+                groupname: JobBatchSpec.from_dict(
+                    group | {"config_dir": d["config_dir"]}
+                )
                 for groupname, group in d["jobs"].items()
             },
         )

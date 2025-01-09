@@ -762,7 +762,9 @@ def run_jobs(
     config: RunJobsSpec
     with open(config_file, "r") as fl:
         d = load(fl, Loader=Loader)
-        config = RunJobsSpec.from_dict(d)
+        config = RunJobsSpec.from_dict(
+            d | {"config_dir": os.path.realpath(os.path.dirname(config_file))}
+        )
 
     executor = config.executor
 
