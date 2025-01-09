@@ -22,7 +22,11 @@ from glob import glob
 
 from pydantic import BaseModel, model_validator
 
-from simcommsys_utils.executors import SimcommsysExecutorType, SimcommsysJob
+from simcommsys_utils.executors import (
+    SimcommsysExecutorType,
+    SimcommsysJob,
+    SimcommsysExecutor,
+)
 
 
 class JobBatchSpec(BaseModel):
@@ -111,7 +115,7 @@ class JobBatchSpec(BaseModel):
                 for name in glob(self.glob, root_dir=base_dir)
             ]
 
-        if all(x is not None for x in [self.start, self.stop]):
+        if all(x is not None for x in [self.start, self.stop, self.step or self.mul]):
             # get list of jobs using start/stop/step or mul
             return [
                 SimcommsysJob(
@@ -152,6 +156,34 @@ class JobBatchSpec(BaseModel):
                 for jobfile in input_files
                 for param in self.params
             ]
+
+    @classmethod
+    def from_dict(cls, d: dict[str, any]) -> Self:
+        """
+        Parse a JobBatchSpec object from a dict
+
+        Once a YAML file has been parsed into a dict, that dict can
+        be converted into models using this method
+        """
+        return cls(
+            config_dir=d.pop("config_dir"),
+            base_dir=d.pop("base_dir", None),
+            rgx=d.pop("rgx", None),
+            glob=d.pop("glob", None),
+            output_dir=d.pop("output_dir"),
+            params=d.pop("params", None),
+            start=d.pop("start", None),
+            stop=d.pop("stop", None),
+            step=d.pop("step", None),
+            mul=d.pop("mul", None),
+            confidence=d.pop("confidence"),
+            relative_error=d.pop("relative_error"),
+            floor_min=d.pop("floor_min"),
+            simcommsys_tag=d.pop("simcommsys_tag"),
+            simcommsys_type=d.pop("simcommsys_type"),
+            # remaining elements in d will be passed to executor
+            executor_kwargs=d,
+        )
 
     ### Validators
 
@@ -220,3 +252,28 @@ class RunJobsSpec(BaseModel):
     executor_type: SimcommsysExecutorType
     executor_kwargs: dict[str, any]
     jobs: dict[str, JobBatchSpec]
+
+    @property
+    def executor(self) -> SimcommsysExecutor:
+        """
+        Obtain executor specified by this RunJobsSpec object
+        """
+        return self.executor_type.executor_type(**self.executor_kwargs)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, any]) -> Self:
+        """
+        Parse a RunJobSpec object from a dict
+
+        Once a YAML file has been parsed into a dict, that dict can
+        be converted into models using this method
+        """
+        return cls(
+            executor_type=d["executor"].pop("type"),
+            # remaining elements in executor dict passed as args to executor constructor
+            executor_kwargs=d["executor"],
+            jobs={
+                groupname: JobBatchSpec.from_dict(group)
+                for groupname, group in d["jobs"]
+            },
+        )

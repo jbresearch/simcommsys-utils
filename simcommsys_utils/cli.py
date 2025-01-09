@@ -18,7 +18,6 @@
 import logging
 import os
 import subprocess
-from glob import glob
 from typing import Annotated, Any, Literal, cast, List
 import re
 import sys
@@ -32,14 +31,8 @@ try:
 except ImportError:
     from yaml import Loader  # type:ignore
 
-from .executors import (
-    SimcommsysJob,
-    SlurmSimcommsysExecutor,
-    SimcommsysExecutor,
-    LocalSimcommsysExecutor,
-    MasterSlaveSimcommsysExecutor,
-)
-from .pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
+from simcommsys_utils.run_jobs import RunJobsSpec
+from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
 
 app = typer.Typer()
 
@@ -738,6 +731,10 @@ def run_jobs(
             # glob that specifies path to simulator files for all simulations in this group.
             # Paths must be specified relative to the configuration file.
             glob: <glob-path>
+            # regex that specifies path to simulator files for all simulations in this group.
+            # Paths must be specified relative to the configuration file.
+            # Ignored if glob is also specified
+            rgx: <rgx-path>
             # Output directory where simulation results will be stored.
             output_dir: <output-dir>
             # Simcommsys parameters for each simulation in this group
@@ -762,64 +759,23 @@ def run_jobs(
         config_file
     ), f"Specified configuration file {config_file} does not exist."
 
-    config: dict[str, Any]
+    config: RunJobsSpec
     with open(config_file, "r") as fl:
-        config = load(fl, Loader=Loader)
+        d = load(fl, Loader=Loader)
+        config = RunJobsSpec.from_dict(d)
 
-    executor: SimcommsysExecutor
-    match config["executor"].pop("type"):
-        case "slurm":
-            executor = SlurmSimcommsysExecutor(**config["executor"])
-        case "local":
-            executor = LocalSimcommsysExecutor(**config["executor"])
-        case "masterslave":
-            executor = MasterSlaveSimcommsysExecutor(**config["executor"])
-        case _:
-            raise RuntimeError("Unrecognized executor type.")
-
-    jobs_by_group: dict[str, list[SimcommsysJob]] = {}
-    for groupname, jobsspec in config["jobs"].items():
-        output_dir = jobsspec.pop("output_dir")
-        start = jobsspec.pop("start")
-        stop = jobsspec.pop("stop")
-        step = jobsspec.pop("step", None)
-        mul = jobsspec.pop("mul", None)
-        confidence = jobsspec.pop("confidence")
-        relative_error = jobsspec.pop("relative_error")
-        floor_min = jobsspec.pop("floor_min")
-
-        # Input and output files are considered relative to the directory of the config file
-        config_dir = os.path.realpath(os.path.dirname(config_file))
-        jobs_by_group[groupname] = [
-            SimcommsysJob(
-                name=os.path.basename(jobfile.removesuffix(".txt")),
-                inputfile=os.path.join(config_dir, jobfile),
-                outputfile=os.path.join(
-                    config_dir,
-                    output_dir,
-                    os.path.basename(jobfile).removesuffix(".txt") + ".json",
-                ),
-                start=start,
-                stop=stop,
-                step=step,
-                mul=mul,
-                confidence=confidence,
-                relative_error=relative_error,
-                floor_min=floor_min,
-            )
-            for jobfile in glob(jobsspec.pop("glob"), root_dir=config_dir)
-        ]
+    executor = config.executor
 
     # by default all group names are selected
-    selected_groups: set[str] = set(config["jobs"].keys())
+    selected_groups: set[str] = set(config.jobs.keys())
     if group is not None:
         selected_groups = set(group)
 
-    for groupname, jobsspec in config["jobs"].items():
+    for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
             executor.run(
-                jobsspec.pop("simcommsys_tag"),
-                cast(Literal["debug", "release"], jobsspec.pop("simcommsys_type")),
-                jobs=jobs_by_group[groupname],
-                **jobsspec,
+                jobsspec.simcommsys_tag,
+                cast(Literal["debug", "release"], jobsspec.simcommsys_type),
+                jobs=jobsspec.jobs,
+                **jobsspec.executor_kwargs,
             )
