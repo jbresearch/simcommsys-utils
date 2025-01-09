@@ -89,21 +89,7 @@ class JobBatchSpec(BaseModel):
         """
         input_files: list[str] = []
         # base directory relative to which we search for input files
-        base_dir: str
-        if self.base_dir is not None:
-            if os.path.isabs(self.base_dir):
-                base_dir = self.base_dir
-            else:
-                base_dir = os.path.join(self.config_dir, self.base_dir)
-        else:
-            base_dir = self.config_dir
-
-        # find absolute path to output_dir
-        output_dir: str
-        if os.path.isabs(self.output_dir):
-            output_dir = self.output_dir
-        else:
-            output_dir = os.path.join(self.config_dir, self.output_dir)
+        base_dir: str = self.base_dir or self.config_dir
 
         # get input files using either regex or glob
         if self.rgx is not None:
@@ -126,7 +112,7 @@ class JobBatchSpec(BaseModel):
                     name=os.path.basename(jobfile.removesuffix(".txt")),
                     inputfile=jobfile,
                     outputfile=os.path.join(
-                        output_dir,
+                        self.output_dir,
                         os.path.basename(jobfile).removesuffix(".txt") + ".json",
                     ),
                     start=self.start,
@@ -146,7 +132,7 @@ class JobBatchSpec(BaseModel):
                     name=os.path.basename(jobfile.removesuffix(".txt")),
                     inputfile=jobfile,
                     outputfile=os.path.join(
-                        output_dir,
+                        self.output_dir,
                         os.path.basename(jobfile).removesuffix(".txt")
                         + f"{param:e}.json",
                     ),
@@ -214,15 +200,29 @@ class JobBatchSpec(BaseModel):
         """
         Check that directories specified using 'output_dir' and 'config_dir' exist
         Also checks 'base_dir' if this is specified
+
+        We also make 'base_dir' and 'output_dir' absolute if we can
         """
-        if self.base_dir is not None and not os.path.isdir(self.base_dir):
-            raise ValueError(
-                f"Base directory {self.base_dir} does not exist or is not a directory"
-            )
+        if self.base_dir is not None:
+            # make base_dir absolute if it is not
+            if not os.path.isabs(self.base_dir):
+                self.base_dir = os.path.join(self.config_dir, self.base_dir)
+            # check that base_dir exists
+            if not os.path.isdir(self.base_dir):
+                raise ValueError(
+                    f"Base directory {self.base_dir} does not exist or is not a directory"
+                )
+
+        # check that config_dir exists
         if not os.path.isdir(self.config_dir):
             raise ValueError(
                 f"Config directory {self.config_dir} does not exist or is not a directory"
             )
+
+        # make output_dir absolute if it is not
+        if not os.path.isabs(self.output_dir):
+            self.output_dir = os.path.join(self.config_dir, self.output_dir)
+        # check that output_dir exists
         if not os.path.isdir(self.output_dir):
             raise ValueError(
                 f"Output directory {self.output_dir} does not exist or is not a directory"
