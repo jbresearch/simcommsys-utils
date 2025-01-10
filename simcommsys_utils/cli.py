@@ -734,6 +734,8 @@ def run_jobs(
     jobs:
         [
         <group-name>:
+            # Base directory of input files. If not absolute, it is relative to directory of config file
+            base_dir: <base-dir>
             # glob that specifies path to simulator files for all simulations in this group.
             # Paths must be specified relative to the configuration file.
             glob: <glob-path>
@@ -743,9 +745,16 @@ def run_jobs(
             rgx: <rgx-path>
             # Output directory where simulation results will be stored.
             output_dir: <output-dir>
+            # If specified, an instance of each simcommsys simulation will be run with start,stop set to <param>
+            [
+            params:
+                [- <param>]+
+            ]
             # Simcommsys parameters for each simulation in this group
-            start: <start>
-            stop: <stop>
+            [start: <start>]
+            [stop: <stop>]
+            [step: <step>]
+            [mul: <mul>]
             confidence: <confidence>
             relative_error: <relative-error>
             floor_min: <floor-min>
