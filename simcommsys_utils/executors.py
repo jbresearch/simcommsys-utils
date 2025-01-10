@@ -71,6 +71,7 @@ class SimcommsysExecutor(abc.ABC):
         simcommsys_tag: str,
         simcommsys_type: Literal["debug", "release"],
         jobs: list[SimcommsysJob],
+        dry_run: bool = False,
         **jobparams,
     ):
         """
@@ -99,6 +100,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_tag: str,
         simcommsys_type: Literal["debug", "release"],
         jobs: list[SimcommsysJob],
+        dry_run: bool = False,
         *,
         needs_gpu: bool,
         # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
@@ -134,8 +136,11 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
             )
             cmd = f"sbatch {sbatch_opts} --wrap='{simcommsys_cmd} -e local'"
 
-            logging.debug(cmd)
-            subprocess.run(cmd, shell=True)
+            if dry_run:
+                print(cmd)
+            else:
+                logging.debug(cmd)
+                subprocess.run(cmd, shell=True)
 
             if nodelist:
                 index = (index + 1) % len(nodelist)
@@ -147,6 +152,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_tag: str,
         simcommsys_type: Literal["debug", "release"],
         jobs: list[SimcommsysJob],
+        dry_run: bool = False,
         *,
         memlimit_gb=100,
     ):
@@ -157,8 +163,11 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             )
             cmd = f"ulimit -v {memlimit_gb * 1024 * 1024} && {simcommsys_cmd} -e local"
 
-            logging.debug(cmd)
-            subprocess.run(cmd, shell=True)
+            if dry_run:
+                print(cmd)
+            else:
+                logging.debug(cmd)
+                subprocess.run(cmd, shell=True)
 
 
 class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
@@ -167,6 +176,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_tag: str,
         simcommsys_type: Literal["debug", "release"],
         jobs: list[SimcommsysJob],
+        dry_run: bool = False,
         *,
         memlimit_gb=100,
         port: int | str = 3008,
@@ -234,9 +244,11 @@ do
     sleep 1
 done
 """
-
-            logging.debug(cmd)
-            subprocess.run(cmd, shell=True)
+            if dry_run:
+                print(cmd)
+            else:
+                logging.debug(cmd)
+                subprocess.run(cmd, shell=True)
 
 
 class SimcommsysExecutorType(str, Enum):

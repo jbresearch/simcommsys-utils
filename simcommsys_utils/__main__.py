@@ -22,7 +22,7 @@ import sys
 logging.basicConfig(
     format="%(levelname)s %(asctime)s: %(message)s",
     encoding="utf-8",
-    level=logging.DEBUG,
+    level=logging.INFO,
     stream=sys.stdout,
 )
 

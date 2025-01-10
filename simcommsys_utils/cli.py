@@ -712,6 +712,12 @@ def run_jobs(
             help="Select groups of jobs to run from configuration file. All groups are run by default."
         ),
     ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            help="Print commands that would be run to start jobs, but do not actually run them."
+        ),
+    ] = False,
 ):
     """
     This command can be used to run a batch of Simcommsys simulations.
@@ -779,5 +785,6 @@ def run_jobs(
                 jobsspec.simcommsys_tag,
                 cast(Literal["debug", "release"], jobsspec.simcommsys_type),
                 jobs=jobsspec.jobs,
+                dry_run=dry_run,
                 **jobsspec.executor_kwargs,
             )
