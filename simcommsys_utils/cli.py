@@ -515,15 +515,20 @@ def make_ldpc_systems(
     ],
 ):
     """
-    Creates LDPC system files from the templates specified by --templates-dir and the LDPC codes specified by --codes-dir
+    Creates LDPC system files from the templates specified by --templates-dir and the LDPC codes
+    specified by --codes-dir
 
-    One system file is created for each combination of template file, code file, real type (specified by --real-type), Galois field (specified by --gf) and SPA type (specified by --spa-type).
+    One system file is created for each combination of template file, code file, real type
+    (specified by --real-type), Galois field (specified by --gf) and SPA type (specified by --spa-type).
 
-    The system files are generated in the output directory specified by --output-dir and have a filename following the scheme <template-filename>.<gf>.<ldpc-code-filename>.<real-type>.<spa-type>.txt
+    The system files are generated in the output directory specified by --output-dir and have a filename
+    following the scheme <template-filename>.<gf>.<ldpc-code-filename>.<real-type>.<spa-type>.txt
 
     The template file should contain all system components up until the codec.
 
-    If there are components which depend on the Galois field, the Galois field can be specified as {gf} in the template; this will then be substituted for the actual field when instantiating the template.
+    If there are components which depend on the Galois field, the Galois field can be specified as
+    {gf} in the template; this will then be substituted for the actual field when instantiating the
+    template.
     """
 
     assert os.path.isdir(
@@ -668,7 +673,8 @@ def convert_pchk(
     - simcommsys: This is the format used internally by Simcommsys. It can accomodate binary/non-binary codes, and also specifies how non-binary values are generated if a binary code is to be used in a non-binary context.
     - flat: Matrix is specified in full with some delimiter seperating values in each row
 
-    The command tries to accomodate the format conversions specified by the user as best as possible given the input file.
+    The command tries to accomodate the format conversions specified by the user as best as possible
+    given the input file.
 
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
@@ -765,9 +771,13 @@ def run_jobs(
             [key: value]*
         ]*
 
-    As shown in the above specification, Simcommsys simulations are grouped into named groups within the configuration file. The user can run just a select few of the groups specified in the configuration file using the --group option (by default all groups are run).
+    As shown in the above specification, Simcommsys simulations are grouped into named groups
+    within the configuration file. The user can run just a select few of the groups specified
+    in the configuration file using the --group option (by default all groups are run).
 
-    For example if the configuration file contains the groups with names "cpu-eccperf", "gpu-eccperf", "cpu-timings" and "gpu-timings", the user can choose to run the simulations in the first two groups only by specifying --group cpu-eccperf --group gpu-eccperf.
+    For example if the configuration file contains the groups with names "cpu-eccperf",
+    "gpu-eccperf", "cpu-timings" and "gpu-timings", the user can choose to run the simulations
+    in the first two groups only by specifying --group cpu-eccperf --group gpu-eccperf.
     """
 
     assert os.path.isfile(
