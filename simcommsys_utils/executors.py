@@ -52,15 +52,15 @@ class SimcommsysExecutor(abc.ABC):
         NOTE that the -e flag is not given and must be provided by a subclass
         """
         assert job.step or job.mul, "Must specify step or mul in SimmcommsysJob object."
-        step_or_mul_opt: str
+        param_range: str
         if job.step:
-            step_or_mul_opt = f"--step={job.step}"
+            param_range = f"{job.start}:{job.step}:{job.stop}:arithmetic"
         else:
-            step_or_mul_opt = f"--mul={job.mul}"
+            param_range = f"{job.start}:{job.mul}:{job.stop}:geometric"
 
         return f"simcommsys.{simcommsys_tag}.{simcommsys_type} \
                     -i {job.inputfile} -o {job.outputfile} \
-                    --start {job.start} --stop {job.stop} {step_or_mul_opt} \
+                    --param-range {param_range} \
                     --confidence {job.confidence} --relative-error {job.relative_error} \
                     --floor-min {job.floor_min} \
                     -f json"
