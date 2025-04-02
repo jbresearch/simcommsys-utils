@@ -176,8 +176,6 @@ def make_simulators(
                     f"""commsys_stream_simulator<{match.group(1)},{resultscollector},{match.group(2)}>
 # Version
 2
-# Analyze all decode iterations?
-1
 # Streaming mode (0=open, 1=reset, 2=terminated)
 0
 # Version
@@ -214,8 +212,6 @@ def make_simulators(
                         f"""commsys_stream_simulator<{match.group(1)},{resultscollector},{match.group(2)}>
 # Version
 2
-# Analyze all decode iterations?
-1
 # Streaming mode (0=open, 1=reset, 2=terminated)
 1
 # Number of frames to reset
@@ -254,8 +250,6 @@ def make_simulators(
                         f"""commsys_stream_simulator<{match.group(1)},{resultscollector},{match.group(2)}>
 # Version
 2
-# Analyze all decode iterations?
-1
 # Streaming mode (0=open, 1=reset, 2=terminated)
 2
 # Number of frames to terminate
@@ -291,7 +285,7 @@ def make_simulators(
                 fl.write(
                     f"""commsys_simulator<{match.group(1)},{resultscollector}>
 # Version
-2
+4
 # Analyze all decode iterations?
 {1 if analyze_decode_iters else 0}
 # Input mode (0=zero, 1=random, 2=user[seq])
@@ -353,7 +347,7 @@ def make_timers(
                 fl.write(
                     f"""commsys_timer<{match.group(1)}>
 # Version
-2
+4
 # Analyze all decode iterations?
 0
 # Input mode (0=zero, 1=random, 2=user[seq])
