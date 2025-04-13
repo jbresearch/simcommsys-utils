@@ -85,14 +85,10 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         self,
         *,
         email: str,
-        gpu_partition: str,
-        cpu_partition: str,
         account: str,
     ):
         # SLURM specific global options.
         self.email = email
-        self.gpu_partition = gpu_partition
-        self.cpu_partition = cpu_partition
         self.account = account
 
     def _run_slurm(
@@ -103,6 +99,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         node_index: int,
         dry_run: bool = False,
         *,
+        partition: str,
         needs_gpu: bool,
         # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
         n_gpus: int = 1,
@@ -120,7 +117,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         nodename = nodelist[node_index] if nodelist else None
         sbatch_opts = f"--mail-user={self.email} \
                         --job-name={job_name} \
-                        --partition={self.gpu_partition if needs_gpu else self.cpu_partition} \
+                        --partition={partition} \
                         --ntasks=1 \
                         --cpus-per-task={cpus_per_task} \
                         --mem-per-cpu={memlimit_gb}G \
@@ -148,6 +145,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
+        partition: str,
         needs_gpu: bool,
         # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
         n_gpus: int = 1,
@@ -167,6 +165,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 + " -e local",
                 index,
                 dry_run=dry_run,
+                partition=partition,
                 needs_gpu=needs_gpu,
                 n_gpus=n_gpus,
                 gpuarch=gpuarch,
