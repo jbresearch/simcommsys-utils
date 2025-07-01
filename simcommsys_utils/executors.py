@@ -100,10 +100,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        needs_gpu: bool,
-        # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
-        n_gpus: int = 1,
-        gpuarch: str = "ampere",
+        gres: list[str],
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
@@ -125,9 +122,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --output={os.path.basename(job_outputfile).removesuffix('.json')}.out \
                         --error={os.path.basename(job_outputfile).removesuffix('.json')}.err \
                         --account={self.account} \
-                        --mail-type=all"
-        if needs_gpu:
-            sbatch_opts += f" --gres=gpu:{gpuarch}:{n_gpus}"
+                        --mail-type=all \
+                        --gres={','.join(gres)}"
         if nodename:
             sbatch_opts += f" --nodelist={nodename}"
         cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
@@ -146,10 +142,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        needs_gpu: bool,
-        # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
-        n_gpus: int = 1,
-        gpuarch: str = "ampere",
+        gres: list[str],
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
@@ -166,9 +159,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 index,
                 dry_run=dry_run,
                 partition=partition,
-                needs_gpu=needs_gpu,
-                n_gpus=n_gpus,
-                gpuarch=gpuarch,
+                gres=gres,
                 memlimit_gb=memlimit_gb,
                 timeout_mins=timeout_mins,
                 nodelist=nodelist,
@@ -185,14 +176,17 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
-        memlimit_gb=100,
+        memlimit_gb: int | None = None,
     ):
         for job in jobs:
             # build command to submit to shell.
             simcommsys_cmd = self._get_simcommsys_cmd(
                 simcommsys_tag, simcommsys_type, job
             )
-            cmd = f"ulimit -v {memlimit_gb * 1024 * 1024} && {simcommsys_cmd} -e local"
+            cmd = ""
+            if memlimit_gb is not None:
+                cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
+            cmd = f"{cmd}{simcommsys_cmd} -e local"
 
             if dry_run:
                 print(cmd)
@@ -210,7 +204,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_type: str,
         port: int,
         workers: int,
-        memlimit_gb: int,
+        memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
         simcommsys_cmd = self._get_simcommsys_cmd(simcommsys_tag, simcommsys_type, job)
@@ -230,6 +224,9 @@ do
     simcommsys.{simcommsys_tag}.{simcommsys_type} -e localhost:{port} 1>"{logfile}" 2>&1 &
 done
 """
+        ulimit_cmd = ""
+        if memlimit_gb is not None:
+            ulimit_cmd = f"ulimit -v {memlimit_gb * 1024 * 1024}"
         # the command:
         # 1. sets a memory limit using ulimit -v.
         # 2. starts the simcommsys master in a screen session
@@ -237,7 +234,7 @@ done
         # 4. Registers a handler for Ctrl+C that can kill the simcommsys server screen session
         # 5. Waits for the simcommsys server screen session to terminate or for the user to press Ctrl+C
         cmd = f"""set -e
-ulimit -v {memlimit_gb * 1024 * 1024}
+{ulimit_cmd}
 screen -d -m -S "{port}.{simcommsys_tag}.{simcommsys_type}" {simcommsys_cmd} -e :{port}
 SERVER_PID=$!
 
@@ -266,7 +263,7 @@ done
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
-        memlimit_gb=100,
+        memlimit_gb: int | None = None,
         port: int | str = 3008,
         workers: int | str = cpu_count(),
     ):
@@ -286,7 +283,9 @@ done
 
         for job in jobs:
             # build command to submit to shell.
-            cmd = self._get_cmd(job, simcommsys_tag, simcommsys_type, port, workers)
+            cmd = self._get_cmd(
+                job, simcommsys_tag, simcommsys_type, port, workers, memlimit_gb
+            )
             if dry_run:
                 print(cmd)
             else:
@@ -304,10 +303,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
-        needs_gpu: bool,
-        # NOTE: Defaults are provided so that we don't need to specify them in the case that needs_gpu = False.
-        n_gpus: int = 1,
-        gpuarch: str = "ampere",
+        gres: list[str],
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
@@ -336,9 +332,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
                 self._get_cmd(job, simcommsys_tag, simcommsys_type, port, workers),
                 index,
                 dry_run=dry_run,
-                needs_gpu=needs_gpu,
-                n_gpus=n_gpus,
-                gpuarch=gpuarch,
+                gres=gres,
                 memlimit_gb=memlimit_gb,
                 timeout_mins=timeout_mins,
                 nodelist=nodelist,
