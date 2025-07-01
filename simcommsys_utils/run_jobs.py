@@ -43,38 +43,56 @@ class JobBatchSpec(BaseModel):
 
     # Absolute path of the config file from which this job batch was parsed
     config_dir: str
-    # Path of the base directory relative to which we search for input files
-    # If not given we use config_dir as base_dir
-    # Base directory should be absolute or specified relative to config_dir
+    # "Base" directory of the input files to Simcommsys.
+    # glob or rgx will match files relative to this directory.
+    # If base_dir is not an absolute directory, then it will be considered relative to config_dir.
+    # This parameter is optional and if not specified, it defaults to config_dir.
     base_dir: str | None
-    # Python regex specifying set of simulators to be run
-    # Paths must be specified relative to config_dir
-    # Ignored if glob is specified
+    #  Python regex string which is used to find simulator files underneath base_dir.
+    # One of glob or rgx must be specified.
+    # If both are specified, rgx takes precedent and glob is ignored.
     rgx: str | None
-    # Glob pattern specifying set of simulators to be run
-    # Paths must be specified relative to config_dir
+    # UNIX glob regex string which is used to find simulator files underneath base_dir.
+    # One of glob or rgx must be specified.
+    # If both are specified, rgx takes precedent and glob is ignored.
     glob: str | None
-    # Output directory where results of simulations will be placed
-    # Must be relative to config_dir
+    # Output directory for Simcommsys runs.
+    # If not absolute, the output directory is considered relative to config_dir.
+    # Must be specified.
     output_dir: str
-    # If specified, a simulation with parameter combination set to each combination in
-    # the list will be run.
-    # Cannot be specified if param_ranges is given.
-    # This is useful mostly when we want to run timers for a range of
-    # system params.
+    # List of parameter combinations.
+    # If specified, then for every simulator file matched by rgx or glob,
+    # an individual Simcommsys run is invoked with every parameter combination in params.
+    # Exactly one of params or param_ranges must be specified.
     params: list[list[float]] | None
-    # If specified, a single Simcommsys invocation will run simulations with
-    # each of the param ranges specified.
+    # List of strings containing parameter ranges.
+    # Simcommsys accepts parameter ranges which obey the syntax "<start>:<step>:<stop>:arithmetic" or "<start>:<step>:<stop>:geometric"
+    # where <start>, <step>, and <stop> are floats.
+    # If specified, then each simulator file matched by rgx or glob is invoked a single time with the parameters specified in param_ranges.
+    # Exactly one of params or param_ranges must be specified.
     param_ranges: list[str] | None
-    # Level of confidence for each simulation
+    # Value of the --confidence Simcommsys parameter that each simulation in the group is invoked with.
+    # Must be specified.
     confidence: float
-    # Relative error required for each simulation
+    # Value of the --relative-error Simcommsys parameter that each simulation in the group is invoked with.
+    # Must be specified.
     relative_error: float
-    # Each simulation ends when error floor is lower than this value
+    # Value of the --floor-min Simcommsys parameter that each simulation in the group is invoked with.
+    # Must be specified.
     floor_min: float
-    # Specify tag of Simcommsys binary to use, e.g. development-cuda86
+    # Simcommsys binary tag.
+    # When Simcommsys is compiled, the produced binaries have the format simcommsys.<tag>.<build-type>,
+    # where <tag> depends on the branch and certain build parameters.
+    # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
+    # that you wish to run each simulation with.
+    # Must be specified.
     simcommsys_tag: str
-    # Specify type of Simcommsys binary to use, should be release|debug|profile
+    # Simcommsys build type.
+    # When Simcommsys is compiled, the produced binaries have the format simcommsys.<tag>.<build-type>,
+    # where <build-type> is either debug, release or profile.
+    # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
+    # that you wish to run each simulation with.
+    # Must be specified.
     simcommsys_type: str
     executor_kwargs: dict[str, Any]
 
@@ -155,10 +173,7 @@ class JobBatchSpec(BaseModel):
             glob=d.pop("glob", None),
             output_dir=d.pop("output_dir"),
             params=d.pop("params", None),
-            start=d.pop("start", None),
-            stop=d.pop("stop", None),
-            step=d.pop("step", None),
-            mul=d.pop("mul", None),
+            param_ranges=d.pop("param_ranges", None),
             confidence=d.pop("confidence"),
             relative_error=d.pop("relative_error"),
             floor_min=d.pop("floor_min"),
