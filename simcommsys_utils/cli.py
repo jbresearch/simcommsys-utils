@@ -740,33 +740,28 @@ def run_jobs(
             # considered relative to the directory containing the YAML job file.
             # This parameter is optional and if not specified, it defaults to
             # the directory containing YAML job file.
-            base_dir: <base-dir>
-
+            base_dir: <str>
             # UNIX glob regex string which is used to find simulator files underneath
             # base_dir.
             # One of glob or rgx must be specified.
             # If both are specified, rgx takes precedent and glob is ignored.
-            glob: <glob-path>
-
+            glob: <glob str>
             #  Python regex string which is used to find simulator files underneath
             # base_dir.
             # One of glob or rgx must be specified.
             # If both are specified, rgx takes precedent and glob is ignored.
-            rgx: <rgx-path>
-
+            rgx: <rgx str>
             # Output directory for Simcommsys runs.
             # If not absolute, the output directory is considered relative to the
             # directory containing the YAML job file.
             # Must be specified.
-            output_dir: <output-dir>
-
+            output_dir: <str>
             # List of parameter combinations.
             # If specified, then for every simulator file matched by rgx or glob,
             # an individual Simcommsys run is invoked with every parameter combination
             # in params.
             # Exactly one of params or param_ranges must be specified.
             params: <list of list of float>
-
             # List of strings containing parameter ranges.
             # Simcommsys accepts parameter ranges which obey the syntax
             # "<start>:<step>:<stop>:arithmetic" or "<start>:<step>:<stop>:geometric"
@@ -775,22 +770,18 @@ def run_jobs(
             # invoked a single time with the parameters specified in param_ranges.
             # Exactly one of params or param_ranges must be specified.
             param_ranges: <list of str>
-
             # Value of the --confidence Simcommsys parameter that each simulation
             # in the group is invoked with.
             # Must be specified.
-            confidence: <confidence>
-
+            confidence: <float>
             # Value of the --relative-error Simcommsys parameter that each simulation
             # in the group is invoked with.
             # Must be specified.
-            relative_error: <relative-error>
-
+            relative_error: <float>
             # Value of the --floor-min Simcommsys parameter that each simulation
             # in the group is invoked with.
             # Must be specified.
-            floor_min: <floor-min>
-
+            floor_min: <float>
             # Simcommsys binary tag.
             # When Simcommsys is compiled, the produced binaries have the format
             # simcommsys.<tag>.<build-type>, where <tag> depends on the branch and
@@ -798,8 +789,7 @@ def run_jobs(
             # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
             # that you wish to run each simulation with.
             # Must be specified.
-            simcommsys_tag: <simcommsys-tag>
-
+            simcommsys_tag: <str>
             # Simcommsys build type.
             # When Simcommsys is compiled, the produced binaries have the format
             # simcommsys.<tag>.<build-type>, where <build-type> is either debug, release
@@ -807,8 +797,7 @@ def run_jobs(
             # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
             # that you wish to run each simulation with.
             # Must be specified.
-            simcommsys_type: "release" | "debug" | "profile"
-
+            simcommsys_type: <"release" | "debug" | "profile">
             # additional dynamic params that are specific to an executor type.
             [key: value]*
         ]*
