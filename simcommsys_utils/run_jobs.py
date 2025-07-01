@@ -140,7 +140,9 @@ class JobBatchSpec(BaseModel):
             # get list of jobs using params
             return [
                 SimcommsysJob(
-                    name=os.path.basename(jobfile.removesuffix(".txt")),
+                    name=os.path.basename(jobfile.removesuffix(".txt"))
+                    + "."
+                    + ":".join(map(lambda p: f"{p:e}", pset)),
                     inputfile=jobfile,
                     outputfile=os.path.join(
                         self.output_dir,
