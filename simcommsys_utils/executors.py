@@ -30,10 +30,7 @@ class SimcommsysJob:
     name: str
     inputfile: str
     outputfile: str
-    start: float
-    stop: float
-    step: float | None
-    mul: float | None
+    param_ranges: list[str]
     confidence: float
     relative_error: float
     floor_min: float
@@ -51,16 +48,13 @@ class SimcommsysExecutor(abc.ABC):
 
         NOTE that the -e flag is not given and must be provided by a subclass
         """
-        assert job.step or job.mul, "Must specify step or mul in SimmcommsysJob object."
-        param_range: str
-        if job.step:
-            param_range = f"{job.start}:{job.step}:{job.stop}:arithmetic"
-        else:
-            param_range = f"{job.start}:{job.mul}:{job.stop}:geometric"
+        param_ranges = ""
+        for prange in job.param_ranges:
+            param_ranges += f"--param-range {prange}"
 
         return f"simcommsys.{simcommsys_tag}.{simcommsys_type} \
                     -i {job.inputfile} -o {job.outputfile} \
-                    --param-range {param_range} \
+                    {param_ranges} \
                     --confidence {job.confidence} --relative-error {job.relative_error} \
                     --floor-min {job.floor_min} \
                     -f json"
@@ -77,7 +71,7 @@ class SimcommsysExecutor(abc.ABC):
         """
         Runs several simcommsys simulations on a remote.
         """
-        pass
+        raise NotImplementedError
 
 
 class SlurmSimcommsysExecutor(SimcommsysExecutor):

@@ -57,19 +57,15 @@ class JobBatchSpec(BaseModel):
     # Output directory where results of simulations will be placed
     # Must be relative to config_dir
     output_dir: str
-    # If specified, a simulation with parameter set to each float in
-    # the list. Ignored if start/stop/step are given
+    # If specified, a simulation with parameter combination set to each combination in
+    # the list will be run.
+    # Cannot be specified if param_ranges is given.
     # This is useful mostly when we want to run timers for a range of
-    # system params
-    params: list[float] | None
-    # starting param of each simulation
-    start: float | None
-    # ending param of each simulation
-    stop: float | None
-    # step used for each simulation
-    step: float | None
-    # multiplicative step used for each simulation
-    mul: float | None
+    # system params.
+    params: list[list[float]] | None
+    # If specified, a single Simcommsys invocation will run simulations with
+    # each of the param ranges specified.
+    param_ranges: list[str] | None
     # Level of confidence for each simulation
     confidence: float
     # Relative error required for each simulation
@@ -105,8 +101,8 @@ class JobBatchSpec(BaseModel):
                 for name in glob(self.glob, root_dir=base_dir)
             ]
 
-        if all(x is not None for x in [self.start, self.stop, self.step or self.mul]):
-            # get list of jobs using start/stop/step or mul
+        if self.param_ranges is not None:
+            # get list of jobs using param_ranges
             return [
                 SimcommsysJob(
                     name=os.path.basename(jobfile.removesuffix(".txt")),
@@ -115,10 +111,7 @@ class JobBatchSpec(BaseModel):
                         self.output_dir,
                         os.path.basename(jobfile).removesuffix(".txt") + ".json",
                     ),
-                    start=self.start,
-                    stop=self.stop,
-                    step=self.step,
-                    mul=self.mul,
+                    param_ranges=self.param_ranges,
                     confidence=self.confidence,
                     relative_error=self.relative_error,
                     floor_min=self.floor_min,
@@ -134,18 +127,17 @@ class JobBatchSpec(BaseModel):
                     outputfile=os.path.join(
                         self.output_dir,
                         os.path.basename(jobfile).removesuffix(".txt")
-                        + f".{param:e}.json",
+                        + "."
+                        + ":".join(map(lambda p: f"{p:e}", pset))
+                        + ".json",
                     ),
-                    start=param,
-                    stop=param,
-                    step=1,
-                    mul=self.mul,
+                    param_ranges=[f"{p}:1:{p}:arithmetic" for p in pset],
                     confidence=self.confidence,
                     relative_error=self.relative_error,
                     floor_min=self.floor_min,
                 )
                 for jobfile in input_files
-                for param in self.params
+                for pset in self.params
             ]
 
     @classmethod
@@ -230,21 +222,34 @@ class JobBatchSpec(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_params_specified(self) -> Self:
+    def check_params_or_param_ranges_specified(self) -> Self:
         """
         Check that a range of params for use with simulation have
-        been specified, either through params or start/step/mul/stop
+        been specified, either through params or param_ranges
         """
-        if all(x is None for x in [self.start, self.stop, self.step, self.mul]):
-            if self.params is None:
-                raise ValueError(
-                    "Must specify range of simulation params using 'params' or 'start'/'step'/'stop'"
-                )
-        elif any(x is None for x in [self.start, self.stop, self.step or self.mul]):
+        if self.params is None and self.param_ranges is None:
             raise ValueError(
-                "If specifying range of simulation params using 'start'/('step'|'mul')/'stop', all these fields are required"
+                "Must specify range of simulation params using 'params' or 'param_ranges'"
+            )
+        elif self.params is not None and self.param_ranges is not None:
+            raise ValueError(
+                "If specifying range of simulation params using 'param_ranges', you cannot specify 'params'"
             )
         return self
+
+    @model_validator(mode="after")
+    def check_param_ranges_valid(self) -> Self:
+        """
+        Check that parameter ranges specified using param_ranges have a valid syntax accepted by Simcommsys.
+        """
+        if self.param_ranges is not None:
+            prange_rgx_str = r"^((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((arithmetic)|(geometric))$"
+            prange_rgx = re.compile(prange_rgx_str)
+            for prange in self.param_ranges:
+                if prange_rgx.match(prange) is None:
+                    raise ValueError(
+                        f"Invalid parameter range {prange} specified in param_ranges field, range must follow syntax {prange_rgx_str}"
+                    )
 
 
 class RunJobsSpec(BaseModel):

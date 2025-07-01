@@ -745,16 +745,17 @@ def run_jobs(
             rgx: <rgx-path>
             # Output directory where simulation results will be stored.
             output_dir: <output-dir>
-            # If specified, an instance of each simcommsys simulation will be run with start,stop set to <param>
-            [
-            params:
-                [- <param>]+
-            ]
-            # Simcommsys parameters for each simulation in this group
-            [start: <start>]
-            [stop: <stop>]
-            [step: <step>]
-            [mul: <mul>]
+            # If specified, a simulation with parameter combination set to each combination in
+            # the list will be run.
+            # Cannot be specified if param_ranges is given.
+            # This is useful mostly when we want to run timers for a range of
+            # system params.
+            params: <list of list of float>
+            # Simcommsys parameter ranges for each simulation in this group
+            # Should not be specified if params is given
+            # Each range is specified as {start}:{step}:{stop}:(arithmetic|geometric)
+            # where start, step, stop are valid floats
+            param_ranges: <list of str>
             confidence: <confidence>
             relative_error: <relative-error>
             floor_min: <floor-min>
