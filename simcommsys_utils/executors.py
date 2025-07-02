@@ -24,7 +24,11 @@ from multiprocessing import cpu_count
 import os
 from enum import Enum
 
-from simcommsys_utils.run_jobs import SimcommsysBuildType
+
+class SimcommsysBuildType(str, Enum):
+    DEBUG = "debug"
+    RELEASE = "release"
+    PROFILE = "profile"
 
 
 @dataclass

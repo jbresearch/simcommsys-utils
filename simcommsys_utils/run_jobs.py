@@ -20,7 +20,6 @@ from typing_extensions import Self
 import re
 import os
 from glob import glob
-import enum
 
 from pydantic import BaseModel, model_validator, StringConstraints, AfterValidator
 from pydantic import ConfigDict
@@ -29,13 +28,8 @@ from simcommsys_utils.executors import (
     SimcommsysExecutorType,
     SimcommsysJob,
     SimcommsysExecutor,
+    SimcommsysBuildType,
 )
-
-
-class SimcommsysBuildType(str, enum.Enum):
-    DEBUG = "debug"
-    RELEASE = "release"
-    PROFILE = "profile"
 
 
 def _is_valid_rgx(rgx: str | None):
