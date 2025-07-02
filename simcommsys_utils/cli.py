@@ -34,6 +34,7 @@ except ImportError:
 
 from simcommsys_utils.run_jobs import RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
+from simcommsys_utils.executors import SimcommsysBuildType
 
 app = typer.Typer()
 
@@ -67,13 +68,17 @@ def copy_binaries(
     logging.info(f"Making directory {remote}:~/bin.{arch}...")
     subprocess.run(f"ssh {remote} 'mkdir -p bin.{arch}'", shell=True)
 
+    # check simcommsys build types are valid
+    simcommsys_type = set(simcommsys_type or [])
+    for t in simcommsys_type:
+        if simcommsys_type not in SimcommsysBuildType:
+            print(
+                f"Unknown simcommsys build type {t} specified. Known types are {', '.join([x.value for x in SimcommsysBuildType])}."
+            )
+            exit(-1)
+
     for b in binary or []:
-        for t in simcommsys_type or []:
-            assert simcommsys_type in [
-                "debug",
-                "release",
-                "profile",
-            ], f"Unknown simcommsys type {t} specified. Known types are debug, release or profile."
+        for t in simcommsys_type:
             if os.path.isfile(f"~/bin.{arch}/{b}.{simcommsys_tag}.{t}"):
                 logging.info(f"Copying {b}.{simcommsys_tag}.{t}...")
                 subprocess.run(
@@ -149,12 +154,12 @@ def make_simulators(
     Create Simcommsys simulator files from a set of Simcommsys system files in --input-dir.
     """
 
-    assert os.path.isdir(
-        input_dir
-    ), f"Input directory given {input_dir} does not exist."
-    assert os.path.isdir(
-        output_dir
-    ), f"Output directory given {output_dir} does not exist."
+    if not os.path.isdir(input_dir):
+        print(f"Input directory given {input_dir} does not exist.")
+        exit(-1)
+    if not os.path.isdir(output_dir):
+        print(f"Output directory given {output_dir} does not exist.")
+        exit(-1)
 
     input_mode_code = input_mode.code
 
@@ -328,12 +333,12 @@ def make_timers(
     Create Simcommsys timer files from a set of Simcommsys system files in --input-dir.
     """
 
-    assert os.path.isdir(
-        input_dir
-    ), f"Input directory given {input_dir} does not exist."
-    assert os.path.isdir(
-        output_dir
-    ), f"Output directory given {output_dir} does not exist."
+    if not os.path.isdir(input_dir):
+        print(f"Input directory given {input_dir} does not exist.")
+        exit(-1)
+    if not os.path.isdir(output_dir):
+        print(f"Output directory given {output_dir} does not exist.")
+        exit(-1)
 
     for sysfile in os.listdir(input_dir):
         commsys: str
@@ -408,12 +413,12 @@ def make_exit_chart_simulators(
     Create Simcommsys exit chart simulator files from a set of Simcommsys system files in --input-dir.
     """
 
-    assert os.path.isdir(
-        input_dir
-    ), f"Input directory given {input_dir} does not exist."
-    assert os.path.isdir(
-        output_dir
-    ), f"Output directory given {output_dir} does not exist."
+    if not os.path.isdir(input_dir):
+        print(f"Input directory given {input_dir} does not exist.")
+        exit(-1)
+    if not os.path.isdir(output_dir):
+        print(f"Output directory given {output_dir} does not exist.")
+        exit(-1)
 
     exit_chart_type_code = exit_chart_type.code
 
@@ -526,16 +531,16 @@ def make_ldpc_systems(
     template.
     """
 
-    assert os.path.isdir(
-        templates_dir
-    ), f"Templates directory given {templates_dir} does not exist."
-    assert os.path.isdir(
-        codes_dir
-    ), f"Codes directory given {codes_dir} does not exist."
+    if not os.path.isdir(templates_dir):
+        print(f"Templates directory given {templates_dir} does not exist.")
+        exit(-1)
+    if not os.path.isdir(codes_dir):
+        print(f"Codes directory given {codes_dir} does not exist.")
+        exit(-1)
 
-    assert os.path.isdir(
-        output_dir
-    ), f"Output directory given {output_dir} does not exist."
+    if not os.path.isdir(output_dir):
+        print(f"Output directory given {output_dir} does not exist.")
+        exit(-1)
 
     for template_file in os.listdir(templates_dir):
         if not template_file.endswith(".txt"):
@@ -871,9 +876,9 @@ def run_jobs(
     in the first two groups only by specifying --group cpu-eccperf --group gpu-eccperf.
     """
 
-    assert os.path.isfile(
-        config_file
-    ), f"Specified configuration file {config_file} does not exist."
+    if not os.path.isfile(config_file):
+        print(f"Specified configuration file {config_file} does not exist.")
+        exit(-1)
 
     config: RunJobsSpec
     try:
