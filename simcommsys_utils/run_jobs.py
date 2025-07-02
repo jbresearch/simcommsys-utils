@@ -20,6 +20,7 @@ from typing_extensions import Self
 import re
 import os
 from glob import glob
+import enum
 
 from pydantic import BaseModel, model_validator, StringConstraints, AfterValidator
 from pydantic import ConfigDict
@@ -29,6 +30,12 @@ from simcommsys_utils.executors import (
     SimcommsysJob,
     SimcommsysExecutor,
 )
+
+
+class SimcommsysBuildType(str, enum.Enum):
+    DEBUG = "debug"
+    RELEASE = "release"
+    PROFILE = "profile"
 
 
 def _is_valid_rgx(rgx: str | None):
@@ -131,7 +138,7 @@ class JobBatchSpec(BaseModel):
     # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
     # that you wish to run each simulation with.
     # Must be specified.
-    simcommsys_type: str
+    simcommsys_type: SimcommsysBuildType
     executor_kwargs: dict[str, Any] = {}
 
     @property

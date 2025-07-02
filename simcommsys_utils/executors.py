@@ -18,12 +18,13 @@
 import abc
 import subprocess
 from dataclasses import dataclass
-from typing import Literal
 import logging
 import multiprocessing
 from multiprocessing import cpu_count
 import os
 from enum import Enum
+
+from simcommsys_utils.run_jobs import SimcommsysBuildType
 
 
 @dataclass
@@ -41,7 +42,7 @@ class SimcommsysExecutor(abc.ABC):
     def _get_simcommsys_cmd(
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         job: SimcommsysJob,
     ):
         """
@@ -53,7 +54,7 @@ class SimcommsysExecutor(abc.ABC):
         for prange in job.param_ranges:
             param_ranges += f"--param-range {prange}"
 
-        return f"simcommsys.{simcommsys_tag}.{simcommsys_type} \
+        return f"simcommsys.{simcommsys_tag}.{simcommsys_type.value} \
                     -i {job.inputfile} -o {job.outputfile} \
                     {param_ranges} \
                     --confidence {job.confidence} --relative-error {job.relative_error} \
@@ -64,7 +65,7 @@ class SimcommsysExecutor(abc.ABC):
     def run(
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         **jobparams,
@@ -130,7 +131,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
     def run(  # type:ignore
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -182,7 +183,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
     def run(  # type:ignore
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -278,7 +279,7 @@ done
     def run(  # type:ignore
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -318,7 +319,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
     def run(  # type:ignore
         self,
         simcommsys_tag: str,
-        simcommsys_type: Literal["debug", "release"],
+        simcommsys_type: SimcommsysBuildType,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
