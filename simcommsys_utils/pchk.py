@@ -66,7 +66,13 @@ class PchkMatrix:
     def __read_flat(
         cls, lines: Iterable[str], delimiter: str, transpose: bool
     ) -> "PchkMatrix":
-        H = np.genfromtxt(lines, delimiter=delimiter, dtype=np.int32, unpack=transpose)
+        H = np.genfromtxt(
+            lines,
+            delimiter=delimiter,
+            dtype=np.int32,
+            unpack=transpose,
+            invalid_raise=True,
+        )
 
         rows, cols = H.shape
 

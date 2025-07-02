@@ -603,6 +603,58 @@ clip
 
 
 @app.command()
+def check_pchk(
+    *,
+    input: Annotated[
+        str,
+        typer.Argument(help="Input file"),
+    ],
+    format: Annotated[
+        PchkMatrixFormat,
+        typer.Option(help="Format of the input file."),
+    ],
+    delimiter: Annotated[
+        str,
+        typer.Option(
+            help="Delimiter of input. This is ignored if the input format is not 'flat'"
+        ),
+    ] = ",",
+    transpose: Annotated[
+        bool,
+        typer.Option(
+            help="Is the input transposed? This is ignored if the input format is not 'flat'"
+        ),
+    ] = False,
+):
+    """
+    This command can be used to check whether a parity check matrix file is valid.
+
+    \b
+    The currently supported formats are:
+    - alist: This is the format introduced by MacKay in http://www.inference.org.uk/mackay/codes/alist.html and subsequently extended for non-binary codes.
+    - simcommsys: This is the format used internally by Simcommsys. It can accomodate binary/non-binary codes, and also specifies how non-binary values are generated if a binary code is to be used in a non-binary context.
+    - flat: Matrix is specified in full with some delimiter seperating values in each row
+
+    The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
+    """
+
+    if os.path.isfile(input):
+        print(f"Input file given {input} does not exist.")
+        exit(-1)
+
+    raw_inp: str
+    with open(input) as fl:
+        raw_inp = fl.read()
+
+    try:
+        PchkMatrix.read(raw_inp, format, delimiter=delimiter, transpose=transpose)
+    except Exception as e:
+        print(f"Error while reading input file {input}: {e}")
+        print(f"Ensure the input is a valid {format.value} file.")
+        exit(-1)
+
+
+@app.command()
 def convert_pchk(
     *,
     input: Annotated[
@@ -674,18 +726,25 @@ def convert_pchk(
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
 
-    assert os.path.isfile(input), f"Input file given {input} does not exist."
-    assert not output or os.path.isdir(
-        os.path.dirname(output)
-    ), f"Directory for output file given {output} does not exist."
+    if os.path.isfile(input):
+        print(f"Input file given {input} does not exist.")
+        exit(-1)
+    if not output or os.path.isdir(os.path.dirname(output)):
+        print(f"Directory for output file given {output} does not exist.")
+        exit(-1)
 
     raw_inp: str
     with open(input) as fl:
         raw_inp = fl.read()
 
-    pchk = PchkMatrix.read(
-        raw_inp, from_format, delimiter=in_delimiter, transpose=in_transpose
-    )
+    try:
+        pchk = PchkMatrix.read(
+            raw_inp, from_format, delimiter=in_delimiter, transpose=in_transpose
+        )
+    except Exception as e:
+        print(f"Error while reading input file {input}: {e}")
+        print(f"Ensure the input is a valid {from_format.value} file.")
+        exit(-1)
 
     with open(output, "w") if output else sys.stdout as fl:
         fl.write(
