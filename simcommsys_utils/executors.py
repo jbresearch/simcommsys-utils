@@ -91,10 +91,10 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        gres: list[str],
+        gres: list[str] | None,
         memlimit_gb: int,
         timeout_mins: int,
-        nodelist: list[str] | str | None = None,
+        nodelist: list[str] | str | None,
         cpus_per_task: int = 1,
     ):
         """
@@ -113,8 +113,10 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --output={os.path.basename(job_outputfile).removesuffix('.json')}.out \
                         --error={os.path.basename(job_outputfile).removesuffix('.json')}.err \
                         --account={self.account} \
-                        --mail-type=all \
-                        --gres={','.join(gres)}"
+                        --mail-type=all "
+
+        if gres:
+            sbatch_opts += f"--gres={','.join(gres)}"
         if nodename:
             sbatch_opts += f" --nodelist={nodename}"
         cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
@@ -133,7 +135,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        gres: list[str],
+        gres: list[str] | None = None,
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
