@@ -647,12 +647,10 @@ def check_pchk(
         print(f"Input file given {input} does not exist.")
         exit(-1)
 
-    raw_inp: str
-    with open(input) as fl:
-        raw_inp = fl.read()
-
     try:
-        PchkMatrix.read(raw_inp, format, delimiter=delimiter, transpose=transpose)
+        with open(input) as fl:
+            # passing fl in as Iterable[str] allows for lazy loading, which when reading large flat files off of disk is handy.
+            PchkMatrix.read(fl, format, delimiter=delimiter, transpose=transpose)
     except Exception as e:
         print(f"Error while reading input file {input}: {e}")
         print(f"Ensure the input is a valid {format.value} file.")
@@ -738,14 +736,12 @@ def convert_pchk(
         print(f"Directory for output file given {output} does not exist.")
         exit(-1)
 
-    raw_inp: str
-    with open(input) as fl:
-        raw_inp = fl.read()
-
     try:
-        pchk = PchkMatrix.read(
-            raw_inp, from_format, delimiter=in_delimiter, transpose=in_transpose
-        )
+        with open(input) as fl:
+            # passing fl in as Iterable[str] allows for lazy loading, which when reading large flat files off of disk is handy.
+            pchk = PchkMatrix.read(
+                fl, from_format, delimiter=in_delimiter, transpose=in_transpose
+            )
     except Exception as e:
         print(f"Error while reading input file {input}: {e}")
         print(f"Ensure the input is a valid {from_format.value} file.")

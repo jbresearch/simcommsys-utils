@@ -20,7 +20,7 @@ from enum import Enum
 from typing import Any, Iterable
 import logging
 import re
-from io import StringIO
+from io import BytesIO
 
 import numpy as np
 
@@ -88,14 +88,14 @@ class PchkMatrix:
         )
 
     def __write_flat(self, delimiter: str, transpose: bool) -> str:
-        H = np.zeros((self.rows, self.cols))
+        H = np.zeros((self.rows, self.cols), dtype=np.int32)
         for r in range(self.rows):
             H[r, self.row_non_zero_pos[r]] = self.row_non_zero_val[r]
         if transpose:
             H = H.T
-        io = StringIO()
+        io = BytesIO()
         np.savetxt(io, H, delimiter=delimiter)
-        return io.read()
+        return io.getvalue().decode()
 
     @classmethod
     def __read_alist(cls, lines: Iterable[str]) -> "PchkMatrix":
@@ -291,8 +291,8 @@ class PchkMatrix:
     @classmethod
     def __read_simcommsys(cls, lines: Iterable[str]) -> "PchkMatrix":
         # remove comment lines
-        lines = map(lambda line: re.sub(r"#.*$", "", line).trim(), lines)
-        lines = filter(lambda l: l == "", lines)
+        lines = map(lambda line: re.sub(r"#.*$", "", line).strip(), lines)
+        lines = filter(lambda l: l != "", lines)
         lines = list(lines)
 
         cols = int(lines[0])
@@ -432,17 +432,19 @@ class PchkMatrix:
 
     @classmethod
     def read(
-        cls, inp: str, format: PchkMatrixFormat, delimiter: str, transpose: bool
+        cls,
+        inp: Iterable[str],
+        format: PchkMatrixFormat,
+        delimiter: str,
+        transpose: bool,
     ) -> "PchkMatrix":
         match format:
             case PchkMatrixFormat.FLAT:
-                return cls.__read_flat(
-                    inp.split("\n"), delimiter=delimiter, transpose=transpose
-                )
+                return cls.__read_flat(inp, delimiter=delimiter, transpose=transpose)
             case PchkMatrixFormat.ALIST:
-                return cls.__read_alist(inp.split("\n"))
+                return cls.__read_alist(inp)
             case PchkMatrixFormat.SIMCOMMSYS:
-                return cls.__read_simcommsys(inp.split("\n"))
+                return cls.__read_simcommsys(inp)
 
     def write(
         self,
