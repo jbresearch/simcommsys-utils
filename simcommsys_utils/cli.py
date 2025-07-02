@@ -554,9 +554,13 @@ def make_ldpc_systems(
             commsys_template = fl.read()
 
         for code_file in os.listdir(codes_dir):
-            if not code_file.endswith(".txt") and not code_file.endswith(".alist"):
+            # check if code_file is a valid parity check matrix file by parsing it.
+            try:
+                with open(os.path.join(codes_dir, code_file), "r") as fl:
+                    PchkMatrix.read(fl, PchkMatrixFormat.SIMCOMMSYS)
+            except Exception as e:
                 logging.warning(
-                    f"{code_file} does not appear to be an alist file (as it does not have a .txt/.alist suffix), skipping..."
+                    f"{code_file} does not appear to be a parity check matrix file (in Simcommsys format), skipping..."
                 )
                 continue
 

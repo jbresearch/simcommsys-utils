@@ -435,9 +435,11 @@ class PchkMatrix:
         cls,
         inp: Iterable[str],
         format: PchkMatrixFormat,
-        delimiter: str,
-        transpose: bool,
+        delimiter: str | None = None,
+        transpose: bool = False,
     ) -> "PchkMatrix":
+        delimiter = delimiter or ","
+
         match format:
             case PchkMatrixFormat.FLAT:
                 return cls.__read_flat(inp, delimiter=delimiter, transpose=transpose)
