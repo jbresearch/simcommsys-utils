@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Any
+from typing import Any, Annotated, Optional
 from typing_extensions import Self
 import re
 import os
 from glob import glob
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, StringConstraints, AfterValidator
 from pydantic import ConfigDict
 
 from simcommsys_utils.executors import (
@@ -29,6 +29,32 @@ from simcommsys_utils.executors import (
     SimcommsysJob,
     SimcommsysExecutor,
 )
+
+
+def _is_valid_rgx(rgx: str | None):
+    """
+    Check that given rgx is valid.
+
+    Returns rgx if it is valid (compiles correctly)
+    Throws ValueError if it is incorrect.
+    """
+    if rgx is not None:
+        try:
+            re.compile(rgx)
+        except re.error as e:
+            raise ValueError(f"'rgx' is invalid: {e}")
+    return rgx
+
+
+def _is_dir(dir: str):
+    """
+    Check that given directory exists.
+
+    Converts it to absolute dir if it does.
+    """
+    if not os.path.isdir(dir):
+        raise ValueError(f"Config directory {dir} does not exist or is not a directory")
+    return os.path.realpath(dir)
 
 
 class JobBatchSpec(BaseModel):
@@ -42,20 +68,20 @@ class JobBatchSpec(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # Absolute path of the config file from which this job batch was parsed
-    config_dir: str
+    config_dir: Annotated[str, AfterValidator(_is_dir)]
     # "Base" directory of the input files to Simcommsys.
     # glob or rgx will match files relative to this directory.
     # If base_dir is not an absolute directory, then it will be considered relative to config_dir.
     # This parameter is optional and if not specified, it defaults to config_dir.
-    base_dir: str | None
+    base_dir: str | None = None
     #  Python regex string which is used to find simulator files underneath base_dir.
     # One of glob or rgx must be specified.
     # If both are specified, rgx takes precedent and glob is ignored.
-    rgx: str | None
+    rgx: Annotated[Optional[str], AfterValidator(_is_valid_rgx)] = None
     # UNIX glob regex string which is used to find simulator files underneath base_dir.
     # One of glob or rgx must be specified.
     # If both are specified, rgx takes precedent and glob is ignored.
-    glob: str | None
+    glob: str | None = None
     # Output directory for Simcommsys runs.
     # If not absolute, the output directory is considered relative to config_dir.
     # Must be specified.
@@ -64,13 +90,25 @@ class JobBatchSpec(BaseModel):
     # If specified, then for every simulator file matched by rgx or glob,
     # an individual Simcommsys run is invoked with every parameter combination in params.
     # Exactly one of params or param_ranges must be specified.
-    params: list[list[float]] | None
+    params: list[list[float]] | None = None
     # List of strings containing parameter ranges.
     # Simcommsys accepts parameter ranges which obey the syntax "<start>:<step>:<stop>:arithmetic" or "<start>:<step>:<stop>:geometric"
     # where <start>, <step>, and <stop> are floats.
     # If specified, then each simulator file matched by rgx or glob is invoked a single time with the parameters specified in param_ranges.
     # Exactly one of params or param_ranges must be specified.
-    param_ranges: list[str] | None
+    param_ranges: (
+        list[
+            Annotated[
+                str,
+                StringConstraints(
+                    # NOTE that this pattern enforces that strings given here are parseable by Simcommsys
+                    # Must update when Simcommsys definition changes
+                    pattern=r"^((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((arithmetic)|(geometric))$"
+                ),
+            ]
+        ]
+        | None
+    ) = None
     # Value of the --confidence Simcommsys parameter that each simulation in the group is invoked with.
     # Must be specified.
     confidence: float
@@ -94,7 +132,7 @@ class JobBatchSpec(BaseModel):
     # that you wish to run each simulation with.
     # Must be specified.
     simcommsys_type: str
-    executor_kwargs: dict[str, Any]
+    executor_kwargs: dict[str, Any] = {}
 
     @property
     def jobs(self) -> list[SimcommsysJob]:
@@ -161,28 +199,19 @@ class JobBatchSpec(BaseModel):
             ]
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> Self:
+    def model_validate(
+        cls, obj: dict[str, Any], *, strict=None, from_attributes=None, context=None
+    ):
         """
-        Parse a JobBatchSpec object from a dict
-
-        Once a YAML file has been parsed into a dict, that dict can
-        be converted into models using this method
+        Construct pydantic model from a dict
         """
-        return cls(
-            config_dir=d.pop("config_dir"),
-            base_dir=d.pop("base_dir", None),
-            rgx=d.pop("rgx", None),
-            glob=d.pop("glob", None),
-            output_dir=d.pop("output_dir"),
-            params=d.pop("params", None),
-            param_ranges=d.pop("param_ranges", None),
-            confidence=d.pop("confidence"),
-            relative_error=d.pop("relative_error"),
-            floor_min=d.pop("floor_min"),
-            simcommsys_tag=d.pop("simcommsys_tag"),
-            simcommsys_type=d.pop("simcommsys_type"),
-            # remaining elements in d will be passed to executor
-            executor_kwargs=d,
+        if "executor_kwargs" in obj:
+            raise ValueError("Cannot have executor_kwargs as field in job group.")
+        # apply reflection, and place any additional keys in obj that are not a part of model into executor_kwargs
+        flds = list(cls.model_fields().keys())
+        obj["executor_kwargs"] = {k: obj.pop(k) for k in obj.keys() if k not in flds}
+        return super().model_validate(
+            obj, strict=strict, from_attributes=from_attributes, context=context
         )
 
     ### Validators
@@ -191,27 +220,23 @@ class JobBatchSpec(BaseModel):
     def check_inputs_specified(self) -> Self:
         """
         Check that a set of input files has been specified using either rgx or glob
-        Also check validity of regex if this is given
         """
-        if self.rgx is not None:
-            try:
-                re.compile(self.rgx)
-            except re.error as e:
-                raise ValueError(f"'rgx' given for input files is invalid: {e}")
-        elif self.glob is None:
+        if self.rgx is None and self.glob is None:
             raise ValueError(
                 "Must specify set of input files using either 'rgx' or 'glob'"
             )
+
         return self
 
     @model_validator(mode="after")
-    def check_dirs_exist(self) -> Self:
+    def check_base_dir_exists(self) -> Self:
         """
-        Check that directories specified using 'output_dir' and 'config_dir' exist
-        Also checks 'base_dir' if this is specified
+        Checks that 'base_dir' exists and convert it to absolute path.
 
-        We also make 'base_dir' and 'output_dir' absolute if we can
+        Note that if 'base_dir' is relative, we consider it relative to 'config_dir'.
+        If 'base_dir' is not given, we set it to 'config_dir'.
         """
+
         if self.base_dir is not None:
             # make base_dir absolute if it is not
             if not os.path.isabs(self.base_dir):
@@ -221,12 +246,17 @@ class JobBatchSpec(BaseModel):
                 raise ValueError(
                     f"Base directory {self.base_dir} does not exist or is not a directory"
                 )
+        else:
+            self.base_dir = self.config_dir
+        return self
 
-        # check that config_dir exists
-        if not os.path.isdir(self.config_dir):
-            raise ValueError(
-                f"Config directory {self.config_dir} does not exist or is not a directory"
-            )
+    @model_validator(mode="after")
+    def check_output_dir_exist(self) -> Self:
+        """
+        Check that 'output_dir' exists and turn it into an absolute path if it does
+
+        If 'output_dir' is relative, we consider it relative to 'config_dir'
+        """
 
         # make output_dir absolute if it is not
         if not os.path.isabs(self.output_dir):
@@ -254,20 +284,6 @@ class JobBatchSpec(BaseModel):
             )
         return self
 
-    @model_validator(mode="after")
-    def check_param_ranges_valid(self) -> Self:
-        """
-        Check that parameter ranges specified using param_ranges have a valid syntax accepted by Simcommsys.
-        """
-        if self.param_ranges is not None:
-            prange_rgx_str = r"^((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((arithmetic)|(geometric))$"
-            prange_rgx = re.compile(prange_rgx_str)
-            for prange in self.param_ranges:
-                if prange_rgx.match(prange) is None:
-                    raise ValueError(
-                        f"Invalid parameter range {prange} specified in param_ranges field, range must follow syntax {prange_rgx_str}"
-                    )
-
 
 class RunJobsSpec(BaseModel):
     """
@@ -290,21 +306,19 @@ class RunJobsSpec(BaseModel):
         return self.executor_type.executor_type(**self.executor_kwargs)
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> Self:
+    def model_validate(
+        cls, obj: dict[str, Any], *, strict=None, from_attributes=None, context=None
+    ):
         """
-        Parse a RunJobSpec object from a dict
+        Construct model from Python dict.
 
-        Once a YAML file has been parsed into a dict, that dict can
-        be converted into models using this method
+        We override the default method as we need to restructure the dictionary obtained from YAML before using it.
         """
-        return cls(
-            executor_type=d["executor"].pop("type"),
-            # remaining elements in executor dict passed as args to executor constructor
-            executor_kwargs=d["executor"],
-            jobs={
-                groupname: JobBatchSpec.from_dict(
-                    group | {"config_dir": d["config_dir"]}
-                )
-                for groupname, group in d["jobs"].items()
-            },
+        obj["executor_type"] = obj["executor"].pop("type")
+        obj["executor_kwargs"] = obj.pop("executor")
+        # pass config_dir to every dict in objs[jobs]
+        for groupname in obj["jobs"].keys():
+            obj["jobs"][groupname]["config_dir"] = obj["config_dir"]
+        return super().model_validate(
+            obj, strict=strict, from_attributes=from_attributes, context=context
         )

@@ -18,13 +18,14 @@
 import logging
 import os
 import subprocess
-from typing import Annotated, Any, Literal, cast, List
+from typing import Annotated, Literal, cast, List
 import re
 import sys
 from enum import Enum
 
 import typer
 from yaml import load
+from pydantic import ValidationError
 
 try:
     from yaml import CLoader as Loader
@@ -816,13 +817,22 @@ def run_jobs(
     ), f"Specified configuration file {config_file} does not exist."
 
     config: RunJobsSpec
-    with open(config_file, "r") as fl:
-        d = load(fl, Loader=Loader)
-        config = RunJobsSpec.from_dict(
-            d | {"config_dir": os.path.realpath(os.path.dirname(config_file))}
-        )
+    try:
+        with open(config_file, "r") as fl:
+            d = load(fl, Loader=Loader)
+            config = RunJobsSpec.model_validate(
+                d | {"config_dir": os.path.realpath(os.path.dirname(config_file))}
+            )
 
-    executor = config.executor
+    except ValidationError as e:
+        print(e)
+        exit(-1)
+
+    try:
+        executor = config.executor
+    except TypeError as e:
+        print(f"Error while initializing executor: {e}")
+        exit(-1)
 
     # by default all group names are selected
     selected_groups: set[str] = set(config.jobs.keys())
