@@ -20,6 +20,7 @@ import subprocess
 from dataclasses import dataclass
 from typing import Literal
 import logging
+import multiprocessing
 from multiprocessing import cpu_count
 import os
 from enum import Enum
@@ -75,15 +76,11 @@ class SimcommsysExecutor(abc.ABC):
 
 
 class SlurmSimcommsysExecutor(SimcommsysExecutor):
-    def __init__(
-        self,
-        *,
-        email: str,
-        account: str,
-    ):
+    def __init__(self, *, email: str, account: str, cancel_on_failure: bool = True):
         # SLURM specific global options.
         self.email = email
         self.account = account
+        self.cancel_on_failure = cancel_on_failure
 
     def _run_slurm(
         self,
@@ -126,7 +123,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
             print(cmd)
         else:
             logging.debug(cmd)
-            subprocess.run(cmd, shell=True)
+            subprocess.run(cmd, shell=True, check=self.cancel_on_failure)
 
     def run(  # type:ignore
         self,
@@ -145,7 +142,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 
         index = 0
         for job in jobs:
-            self._run_slurm(
+            _run_slurm_args = dict(
                 job.name,
                 job.outputfile,
                 self._get_simcommsys_cmd(simcommsys_tag, simcommsys_type, job)
@@ -158,11 +155,28 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 timeout_mins=timeout_mins,
                 nodelist=nodelist,
             )
+            if self.cancel_on_failure:
+                try:
+                    self._run_slurm(**_run_slurm_args)
+                except Exception as e:
+                    # cancel all jobs in this group which have already been scheduled
+                    for job in jobs:
+                        subprocess.run(
+                            f"scancel --name={job.name}", shell=True, check=False
+                        )
+                    raise e
+            else:
+                self._run_slurm(**_run_slurm_args)
+
+            # update node index so that we allocate to every node in nodelist.
             if nodelist:
                 index = (index + 1) % len(nodelist)
 
 
 class LocalSimcommsysExecutor(SimcommsysExecutor):
+    def __init__(self, workers: int | None = None):
+        self.workers = workers or cpu_count()
+
     def run(  # type:ignore
         self,
         simcommsys_tag: str,
@@ -172,6 +186,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         *,
         memlimit_gb: int | None = None,
     ):
+        cmds = []
         for job in jobs:
             # build command to submit to shell.
             simcommsys_cmd = self._get_simcommsys_cmd(
@@ -181,12 +196,20 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
             cmd = f"{cmd}{simcommsys_cmd} -e local"
+            cmds.append(cmd)
 
-            if dry_run:
+        def run_cmd(cmd: str):
+            logging.debug(cmd)
+            subprocess.run(cmd, shell=True, check=True)
+
+        if dry_run:
+            for cmd in cmds:
                 print(cmd)
-            else:
-                logging.debug(cmd)
-                subprocess.run(cmd, shell=True)
+        elif self.workers == 1 or len(cmds) == 1:
+            for cmd in cmds:
+                run_cmd(cmd)
+            with multiprocessing.Pool(processes=self.workers) as p:
+                p.map(run_cmd, cmds)
 
 
 class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
@@ -284,7 +307,7 @@ done
                 print(cmd)
             else:
                 logging.debug(cmd)
-                subprocess.run(cmd, shell=True)
+                subprocess.run(cmd, shell=True, check=True)
 
 
 class SlurmMasterSlaveSimcommsysExecutor(
