@@ -638,7 +638,7 @@ def check_pchk(
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
 
-    if os.path.isfile(input):
+    if not os.path.isfile(input):
         print(f"Input file given {input} does not exist.")
         exit(-1)
 
@@ -726,10 +726,10 @@ def convert_pchk(
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
 
-    if os.path.isfile(input):
+    if not os.path.isfile(input):
         print(f"Input file given {input} does not exist.")
         exit(-1)
-    if not output or os.path.isdir(os.path.dirname(output)):
+    if output is not None and not os.path.isdir(os.path.dirname(output)):
         print(f"Directory for output file given {output} does not exist.")
         exit(-1)
 
