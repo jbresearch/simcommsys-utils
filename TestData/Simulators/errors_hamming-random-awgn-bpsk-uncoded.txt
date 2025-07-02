@@ -1,0 +1,29 @@
+commsys_simulator<sigspace,errors_hamming>
+# Version
+2
+# Analyze all decode iterations?
+1
+# Input mode (0=zero, 1=random, 2=user[seq])
+1
+# Communication system
+commsys<sigspace,vector>
+# Version
+1
+# Single channel?
+1
+## Channel
+awgn
+## Modem
+mpsk
+# Alphabet size in symbols
+2
+## Mapper
+map_straight<vector,double>
+## Codec
+uncoded<double>
+# Version
+1
+# Alphabet size
+2
+# Block length
+16320

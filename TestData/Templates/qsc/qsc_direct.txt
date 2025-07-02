@@ -1,0 +1,11 @@
+commsys<{gf},vector>
+# Version
+1
+# Single channel?
+1
+## Channel
+qsc<{gf}>
+## Modem
+direct_blockmodem<{gf},vector,double>
+## Mapper
+map_straight<vector,double>
