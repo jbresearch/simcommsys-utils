@@ -134,7 +134,10 @@ class PchkMatrix:
 
             col_non_zero_pos = []
             col_non_zero_val: list[np.ndarray[Any, np.int32]]
-            has_values = len([l for l in lines[line_cntr].split() if l != "0"]) == 2 * col_non_zeros[0]
+            has_values = (
+                len([l for l in lines[line_cntr].split() if l != "0"])
+                == 2 * col_non_zeros[0]
+            )
             if has_values:
                 col_non_zero_val = []
                 for _ in range(cols):
@@ -162,7 +165,7 @@ class PchkMatrix:
                     row = lines[line_cntr].split()
                     while row[-1] == "0":
                         row.pop()
-                        
+
                     col_non_zero_pos.append(
                         np.array(list(map(lambda x: int(x) - 1, row)), dtype=np.int32)
                     )
@@ -171,7 +174,10 @@ class PchkMatrix:
 
             row_non_zero_pos = []
             row_non_zero_val: list[np.ndarray[Any, np.int32]]
-            has_values = len([l for l in lines[line_cntr].split() if l != "0"]) >= 2 * row_non_zeros[0]
+            has_values = (
+                len([l for l in lines[line_cntr].split() if l != "0"])
+                >= 2 * row_non_zeros[0]
+            )
             if has_values:
                 row_non_zero_val = []
                 for _ in range(rows):
@@ -199,7 +205,7 @@ class PchkMatrix:
                     row = lines[line_cntr].split()
                     while row[-1] == "0":
                         row.pop()
-                        
+
                     row_non_zero_pos.append(
                         np.array(list(map(lambda x: int(x) - 1, row)), dtype=np.int32)
                     )
@@ -377,22 +383,30 @@ class PchkMatrix:
 
         pos_and_values_str: str
         if values_method == ValuesMethod.PROVIDED:
-            pos_and_values_str = "\n".join(
-                [
-                    f"""{self.__write_simcommsys_vector(np.array(list(map(lambda x: x+1, pos))))}
+            pos_and_values_str = (
+                "\n".join(
+                    [
+                        f"""{self.__write_simcommsys_vector(np.array(list(map(lambda x: x+1, pos))))}
 {self.__write_simcommsys_vector(val)}"""
-                    for pos, val in zip(self.col_non_zero_pos, self.col_non_zero_val)
-                ]
-            ) + "\n"
-        else:
-            pos_and_values_str = "\n".join(
-                map(
-                    lambda pos: self.__write_simcommsys_vector(
-                        np.array(list(map(lambda x: x + 1, pos)))
-                    ),
-                    self.col_non_zero_pos,
+                        for pos, val in zip(
+                            self.col_non_zero_pos, self.col_non_zero_val
+                        )
+                    ]
                 )
-            ) + "\n"
+                + "\n"
+            )
+        else:
+            pos_and_values_str = (
+                "\n".join(
+                    map(
+                        lambda pos: self.__write_simcommsys_vector(
+                            np.array(list(map(lambda x: x + 1, pos)))
+                        ),
+                        self.col_non_zero_pos,
+                    )
+                )
+                + "\n"
+            )
 
         return f"""# Length (n) 
 {self.cols}
