@@ -23,7 +23,7 @@ logging.basicConfig(
     format="%(levelname)s %(asctime)s: %(message)s",
     encoding="utf-8",
     level=logging.INFO,
-    stream=sys.stdout,
+    stream=sys.stderr,
 )
 
 app()
