@@ -20,6 +20,7 @@ from typing_extensions import Self
 import re
 import os
 from glob import glob
+import logging
 
 from pydantic import BaseModel, model_validator, StringConstraints, AfterValidator
 from pydantic import ConfigDict
@@ -67,6 +68,9 @@ class JobBatchSpec(BaseModel):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    # groupname given in the YAML file.
+    groupname: str
 
     # Absolute path of the config file from which this job batch was parsed
     config_dir: Annotated[str, AfterValidator(_is_dir)]
@@ -157,6 +161,11 @@ class JobBatchSpec(BaseModel):
                 os.path.join(base_dir, name)
                 for name in glob(self.glob, root_dir=base_dir)
             ]
+
+        if len(input_files) == 0:
+            logging.warning(
+                f"In group {self.groupname} given rgx or glob pattern did not match any input files."
+            )
 
         if self.param_ranges is not None:
             # get list of jobs using param_ranges
@@ -317,9 +326,10 @@ class RunJobsSpec(BaseModel):
         """
         obj["executor_type"] = obj["executor"].pop("type")
         obj["executor_kwargs"] = obj.pop("executor")
-        # pass config_dir to every dict in objs[jobs]
+        # pass config_dir and groupname to every dict in objs[jobs]
         for groupname in obj["jobs"].keys():
             obj["jobs"][groupname]["config_dir"] = obj["config_dir"]
+            obj["jobs"][groupname]["groupname"] = groupname
         return super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
