@@ -153,7 +153,10 @@ class JobBatchSpec(BaseModel):
             r = re.compile(self.rgx)
             for root, _, files in os.walk(base_dir):
                 for name in files:
-                    if r.match(name):
+                    # make sure that filename we try to match is relative path to base_dir
+                    if r.match(
+                        os.path.relpath(os.path.join(root, name), start=base_dir)
+                    ):
                         input_files.append(os.path.join(root, name))
 
         else:
