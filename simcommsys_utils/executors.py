@@ -17,6 +17,7 @@
 
 import abc
 import subprocess
+from subprocess import CalledProcessError
 from dataclasses import dataclass
 import logging
 import multiprocessing
@@ -30,7 +31,22 @@ def _run_cmd(cmd: str):
     Run a command using subprocess. Command is run in a shell and we error out on failure.
     """
     logging.debug(cmd)
-    subprocess.run(cmd, shell=True, check=True)
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+    except CalledProcessError as e:
+        # catch error in subprocess and print useful human readable info.
+        logging.error(str(e))
+        if e.stderr:
+            logging.error(f"stderr of failed process is:")
+            for line in e.stderr.split("\n"):
+                logging.error(f"\t{line}")
+        if e.output:
+            logging.error(f"stdout of failed process is:")
+            for line in e.output.split("\n"):
+                logging.error(f"\t{line}")
+
+        # crash since one of the jobs failed.
+        exit(-1)
 
 
 class SimcommsysBuildType(str, Enum):
