@@ -25,6 +25,14 @@ import os
 from enum import Enum
 
 
+def _run_cmd(cmd: str):
+    """
+    Run a command using subprocess. Command is run in a shell and we error out on failure.
+    """
+    logging.debug(cmd)
+    subprocess.run(cmd, shell=True, check=True)
+
+
 class SimcommsysBuildType(str, Enum):
     DEBUG = "debug"
     RELEASE = "release"
@@ -205,18 +213,16 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             cmd = f"{cmd}{simcommsys_cmd} -e local"
             cmds.append(cmd)
 
-        def run_cmd(cmd: str):
-            logging.debug(cmd)
-            subprocess.run(cmd, shell=True, check=True)
-
         if dry_run:
             for cmd in cmds:
                 print(cmd)
         elif self.workers == 1 or len(cmds) == 1:
+            # There is no point in using multiprocessing as there is only one command or one worker.
             for cmd in cmds:
-                run_cmd(cmd)
+                _run_cmd(cmd)
+        else:
             with multiprocessing.Pool(processes=self.workers) as p:
-                p.map(run_cmd, cmds)
+                p.map(_run_cmd, cmds)
 
 
 class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
