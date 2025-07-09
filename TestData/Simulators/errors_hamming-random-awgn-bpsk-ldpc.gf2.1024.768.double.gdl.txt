@@ -1,10 +1,10 @@
-commsys_simulator<gf4,errors_hamming>
+commsys_simulator<sigspace,errors_hamming>
 # Version
 2
 # Input mode (0=zero, 1=random, 2=user[seq])
 1
 # Communication system
-commsys<gf4,vector>
+commsys<sigspace,vector>
 # Version
 1
 # Single channel?

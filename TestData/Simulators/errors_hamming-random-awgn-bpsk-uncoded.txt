@@ -1,8 +1,6 @@
 commsys_simulator<sigspace,errors_hamming>
 # Version
 2
-# Analyze all decode iterations?
-1
 # Input mode (0=zero, 1=random, 2=user[seq])
 1
 # Communication system
