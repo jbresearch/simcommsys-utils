@@ -202,7 +202,7 @@ class JobBatchSpec(BaseModel):
                         + ":".join(map(lambda p: f"{p:e}", pset))
                         + ".json",
                     ),
-                    param_ranges=[f"{p}:1:{p}:arithmetic" for p in pset],
+                    param_ranges=[f"{p}:1:{p+1}:arithmetic" for p in pset],
                     confidence=self.confidence,
                     relative_error=self.relative_error,
                     floor_min=self.floor_min,
