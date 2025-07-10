@@ -33,7 +33,7 @@ poetry run simcommsys-utils make-ldpc-systems \
     TestData/Codes/ TestData/Templates/awgn TestData/Systems
 echo "Construction of LDPC system files from templates in TestData/Templates/awgn OK."
 poetry run simcommsys-utils make-ldpc-systems \
-    --real-type float --gf gf2 --gf gf8 --gf gf16 --spa-type gdl_cuda \
+    --real-type float --gf gf2 --gf gf8 --gf gf16 --spa-type gdl \
     TestData/Codes/ TestData/Templates/qsc TestData/Systems
 echo "Construction of LDPC system files from templates in TestData/Templates/qsc OK."
 

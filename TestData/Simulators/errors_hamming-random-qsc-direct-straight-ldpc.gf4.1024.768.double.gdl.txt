@@ -23,8 +23,8 @@ map_straight<vector,double>
 ldpc<gf4,double>
 # Version
 5
-# SPA type (trad|gdl|gdl_cuda)
-gdl_cuda
+# SPA type (trad|gdl)
+gdl
 # Number of iterations
 100
 # Clipping method (zero=replace only zeros, clip=replace values below almostzero)

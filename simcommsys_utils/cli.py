@@ -508,7 +508,6 @@ class SPAType(Enum):
     """
 
     GDL = "gdl"
-    GDL_CUDA = "gdl_cuda"
     TRAD = "trad"
 
 
@@ -615,7 +614,7 @@ def make_ldpc_systems(
 ldpc<{g},{r.value}>
 # Version
 5
-# SPA type (trad|gdl|gdl_cuda)
+# SPA type (trad|gdl)
 {s.value}
 # Number of iterations
 100

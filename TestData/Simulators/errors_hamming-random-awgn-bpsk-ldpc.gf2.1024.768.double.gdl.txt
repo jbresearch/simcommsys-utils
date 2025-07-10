@@ -21,7 +21,7 @@ map_straight<vector,double>
 ldpc<gf2,double>
 # Version
 5
-# SPA type (trad|gdl|gdl_cuda)
+# SPA type (trad|gdl)
 gdl
 # Number of iterations
 100
