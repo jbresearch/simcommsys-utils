@@ -309,16 +309,16 @@ def make_simulators(
                 match input_mode:
                     case InputMode.RANDOM:
                         source = f"""# Input data source
-uniform<int, vector>
+uniform<int,vector>
 ## Alphabet size
 {alphabetsize}"""
                     case InputMode.ZERO:
                         source = """# Input data source
-zero<int, vector>"""
+zero<int,vector>"""
 
                     case InputMode.USER:
                         source = """# Input data source
-sequential<int, vector>
+sequential<int,vector>
 ## Version
 1
 #: input symbols - count
