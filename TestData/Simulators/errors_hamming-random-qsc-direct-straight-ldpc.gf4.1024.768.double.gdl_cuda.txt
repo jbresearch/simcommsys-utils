@@ -3,8 +3,10 @@ commsys_simulator<gf4,errors_hamming>
 4
 # Analyze all decode iterations?
 0
-# Input mode (0=zero, 1=random, 2=user[seq])
-1
+# Input source
+uniform<int, vector>
+## Alphabet size
+2
 # Communication system
 commsys<gf4,vector>
 # Version

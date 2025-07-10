@@ -1,10 +1,10 @@
 executor:
   type: local
-  workers: 1
+  workers: 4
 jobs:
   group1:
     base_dir: ../Simulators
-    glob: "errors_hamming-random-awgn-*.txt"
+    glob: "errors_hamming-random-awgn*.txt"
     output_dir: ../Results
     params:
       - - 2.7

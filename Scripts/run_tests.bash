@@ -41,8 +41,9 @@ echo
 echo "TEST CASE 3"
 echo "==========="
 echo "Testing generation of simulator and timer files ..."
+# NOTE: --simcommsys-tag probably has to be changed on your system.
 poetry run simcommsys-utils make-simulators \
-    --resultscollector errors_hamming --input-mode random --analyze-decode-iters \
+    --resultscollector errors_hamming --input-mode random --analyze-decode-iters --simcommsys-tag development-omp-mpi-gmp-cuda89 \
     TestData/Systems TestData/Simulators
 echo "Generation of Simcommsys simulator files OK."
 poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers
