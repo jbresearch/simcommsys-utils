@@ -50,7 +50,7 @@ def copy_binaries(
     ],
     simcommsys_tag: Annotated[
         str, typer.Option(help="Build tag of Simcommsys binaries to copy.")
-    ] = "development",
+    ] = "master",
     arch: Annotated[
         str, typer.Option(help="Architecture of target machine.")
     ] = "x86_64",
@@ -148,7 +148,7 @@ def make_simulators(
         typer.Option(
             help="Build tag of Simcommsys binary used to get input alphabetsize."
         ),
-    ] = "development",
+    ] = "master",
     simcommsys_build_type: Annotated[
         SimcommsysBuildType | None,
         typer.Option(
