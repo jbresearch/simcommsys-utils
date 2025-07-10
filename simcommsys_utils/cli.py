@@ -22,6 +22,7 @@ from typing import Annotated, Literal, cast, List
 import re
 import sys
 from enum import Enum
+import json
 
 import typer
 from yaml import load
@@ -56,8 +57,8 @@ def copy_binaries(
     binary: Annotated[
         List[str] | None, typer.Option(help="List of binaries to copy to remote.")
     ] = None,
-    simcommsys_type: Annotated[
-        List[str] | None,
+    simcommsys_build_type: Annotated[
+        List[SimcommsysBuildType] | None,
         typer.Option(help="List of Simcommsys types to copy to remote."),
     ] = None,
 ):
@@ -69,16 +70,9 @@ def copy_binaries(
     subprocess.run(f"ssh {remote} 'mkdir -p bin.{arch}'", shell=True)
 
     # check simcommsys build types are valid
-    simcommsys_type = set(simcommsys_type or [])
-    for t in simcommsys_type:
-        if simcommsys_type not in SimcommsysBuildType:
-            print(
-                f"Unknown simcommsys build type {t} specified. Known types are {', '.join([x.value for x in SimcommsysBuildType])}."
-            )
-            exit(-1)
-
+    simcommsys_build_type = set(simcommsys_build_type or [])
     for b in binary or []:
-        for t in simcommsys_type:
+        for t in simcommsys_build_type:
             if os.path.isfile(f"~/bin.{arch}/{b}.{simcommsys_tag}.{t}"):
                 logging.info(f"Copying {b}.{simcommsys_tag}.{t}...")
                 subprocess.run(
@@ -149,10 +143,24 @@ def make_simulators(
             help="List of stream lengths to work with for termination. Only applicable to commsys_stream. Default is [1]."
         ),
     ] = None,
+    simcommsys_tag: Annotated[
+        str,
+        typer.Option(
+            help="Build tag of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = "development",
+    simcommsys_build_type: Annotated[
+        SimcommsysBuildType | None,
+        typer.Option(
+            help="Build type of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = None,
 ):
     """
     Create Simcommsys simulator files from a set of Simcommsys system files in --input-dir.
     """
+
+    simcommsys_build_type = simcommsys_build_type or SimcommsysBuildType.RELEASE
 
     if not os.path.isdir(input_dir):
         print(f"Input directory given {input_dir} does not exist.")
@@ -282,20 +290,49 @@ def make_simulators(
                     )
 
         elif match := re.match(r"commsys[^<]*<(.*),(.*)>", commsys):
+            alphabetsize: int
+            # read alphabetsize from system file (we use simcommsys for this)
+            with os.popen(
+                f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                mode="r",
+            ) as pipe:
+                data = json.load(pipe)
+                alphabetsize = data["input-alphabetsize"]
+
             with open(
                 os.path.join(
                     output_dir, f"{resultscollector}-{input_mode.value}-{sysfile}"
                 ),
                 "w",
             ) as fl:
+                source: str
+                match input_mode:
+                    case InputMode.RANDOM:
+                        source = f"""# Input data source
+uniform<int, vector>
+## Alphabet size
+{alphabetsize}"""
+                    case InputMode.ZERO:
+                        source = """# Input data source
+zero<int, vector>"""
+
+                    case InputMode.USER:
+                        source = """# Input data source
+sequential<int, vector>
+## Version
+1
+#: input symbols - count
+1
+#: input symbols - values
+1"""
+
                 fl.write(
                     f"""commsys_simulator<{match.group(1)},{resultscollector}>
 # Version
 4
 # Analyze all decode iterations?
 {1 if analyze_decode_iters else 0}
-# Input mode (0=zero, 1=random, 2=user[seq])
-{input_mode_code}
+{source}
 """
                 )
                 if input_mode == InputMode.USER:
