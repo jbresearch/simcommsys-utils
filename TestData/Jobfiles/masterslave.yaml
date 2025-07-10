@@ -1,10 +1,10 @@
 executor:
-  type: local
+  type: masterslave
   workers: 4
 jobs:
   group1:
     base_dir: ../Simulators
-    glob: "errors_hamming-random-awgn*.txt"
+    glob: "masterslave.errors_hamming-random-awgn*.txt"
     output_dir: ../Results
     params:
       - - 2.7
@@ -18,7 +18,7 @@ jobs:
     memlimit_gb: 4
   group2:
     base_dir: ..
-    rgx: "Simulators/errors_hamming-random-qsc.*"
+    rgx: "Simulators/masterslave.errors_hamming-random-qsc.*\\.txt"
     output_dir: ../Results
     param_ranges:
       - "0.01:0.1:0.001:geometric"

@@ -52,11 +52,24 @@ echo "Generation of Simcommsys timer files OK."
 echo
 echo "TEST CASE 4"
 echo "==========="
-echo "Testing running jobs in local and master-slave execution contexts ..."
+echo "Testing running jobs in local execution context ..."
 
 poetry run simcommsys-utils run-jobs \
-    --config-file TestData/Jobfiles/jobspec-local-1.yaml \
+    --config-file TestData/Jobfiles/local.yaml \
     --group group1
 poetry run simcommsys-utils run-jobs \
-    --config-file TestData/Jobfiles/jobspec-local-1.yaml \
+    --config-file TestData/Jobfiles/local.yaml \
     --group group2
+
+echo
+echo "TEST CASE 5"
+echo "==========="
+echo "Testing running jobs in masterslave execution context ..."
+
+for fname in TestData/Simulators/errors_*
+do
+    cp "${fname}" "$(dirname ${fname})/masterslave.$(basename ${fname})"
+done
+
+poetry run simcommsys-utils run-jobs \
+    --config-file TestData/Jobfiles/masterslave.yaml

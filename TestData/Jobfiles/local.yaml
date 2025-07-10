@@ -1,0 +1,30 @@
+executor:
+  type: local
+  workers: 4
+jobs:
+  group1:
+    base_dir: ../Simulators
+    glob: "errors_hamming-random-awgn*.txt"
+    output_dir: ../Results
+    params:
+      - - 2.7
+      - - 1.5
+    confidence: 0.9
+    relative_error: 0.1
+    floor_min: 0.5e-3
+    # NOTE: Tag likely needs to be changed on your machine
+    simcommsys_tag: development
+    simcommsys_type: release
+    memlimit_gb: 4
+  group2:
+    base_dir: ..
+    rgx: "Simulators/errors_hamming-random-qsc.*\\.txt"
+    output_dir: ../Results
+    param_ranges:
+      - "0.01:0.1:0.001:geometric"
+    confidence: 0.95
+    relative_error: 0.05
+    floor_min: 1e-3
+    # NOTE: Tag likely needs to be changed on your machine
+    simcommsys_tag: development-omp-mpi-gmp-cuda89
+    simcommsys_type: release
