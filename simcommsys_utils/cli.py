@@ -23,6 +23,7 @@ import re
 import sys
 from enum import Enum
 import json
+import shutil
 
 import typer
 from yaml import load
@@ -161,6 +162,13 @@ def make_simulators(
     """
 
     simcommsys_build_type = simcommsys_build_type or SimcommsysBuildType.RELEASE
+    if not shutil.which(
+        f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value}"
+    ):
+        print(
+            f"Required binary getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} does not exist for --simcommsys-tag={simcommsys_tag} and --simcommsys-build-type={simcommsys_build_type.value}."
+        )
+        exit(-1)
 
     if not os.path.isdir(input_dir):
         print(f"Input directory given {input_dir} does not exist.")
@@ -365,10 +373,31 @@ def make_timers(
             help="Output directory where Simcommsys timer files will be generated."
         ),
     ],
+    simcommsys_tag: Annotated[
+        str,
+        typer.Option(
+            help="Build tag of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = "master",
+    simcommsys_build_type: Annotated[
+        SimcommsysBuildType | None,
+        typer.Option(
+            help="Build type of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = None,
 ):
     """
     Create Simcommsys timer files from a set of Simcommsys system files in --input-dir.
     """
+
+    simcommsys_build_type = simcommsys_build_type or SimcommsysBuildType.RELEASE
+    if not shutil.which(
+        f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value}"
+    ):
+        print(
+            f"Required binary getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} does not exist for --simcommsys-tag={simcommsys_tag} and --simcommsys-build-type={simcommsys_build_type.value}."
+        )
+        exit(-1)
 
     if not os.path.isdir(input_dir):
         print(f"Input directory given {input_dir} does not exist.")
@@ -382,19 +411,30 @@ def make_timers(
         with open(os.path.join(input_dir, sysfile), "r") as fl:
             commsys = fl.read()
 
-        if match := re.match(r"commsys[^<]*<([^,>]*)", commsys):
+        if match := re.match(r"commsys[^<]*<(.*),(.*)>", commsys):
             with open(
                 os.path.join(output_dir, sysfile),
                 "w",
             ) as fl:
+                alphabetsize: int
+                # read alphabetsize from system file (we use simcommsys for this)
+                with os.popen(
+                    f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                    mode="r",
+                ) as pipe:
+                    data = json.load(pipe)
+                    alphabetsize = data["input-alphabetsize"]
+
                 fl.write(
                     f"""commsys_timer<{match.group(1)}>
 # Version
 4
 # Analyze all decode iterations?
 0
-# Input mode (0=zero, 1=random, 2=user[seq])
-1
+# Input data source
+uniform<int,vector>
+## Alphabet size
+{alphabetsize}
 # Communication system
 {commsys}"""
                 )

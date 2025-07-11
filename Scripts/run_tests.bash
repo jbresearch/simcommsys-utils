@@ -46,7 +46,9 @@ poetry run simcommsys-utils make-simulators \
     --resultscollector errors_hamming --input-mode random --analyze-decode-iters --simcommsys-tag development-omp-mpi-gmp-cuda89 \
     TestData/Systems TestData/Simulators
 echo "Generation of Simcommsys simulator files OK."
-poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers
+# NOTE: --simcommsys-tag probably has to be changed on your system.
+poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers \
+    --simcommsys-tag development-omp-mpi-gmp-cuda89
 echo "Generation of Simcommsys timer files OK."
 
 echo
