@@ -174,11 +174,13 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         index = 0
         for job in jobs:
             _run_slurm_args = dict(
-                job.name,
-                job.outputfile,
-                self._get_simcommsys_cmd(simcommsys_tag, simcommsys_type, job)
+                job_name=job.name,
+                job_outputfile=job.outputfile,
+                wrapped_command=self._get_simcommsys_cmd(
+                    simcommsys_tag, simcommsys_type, job
+                )
                 + " -e local",
-                index,
+                node_index=index,
                 dry_run=dry_run,
                 partition=partition,
                 gres=gres,
