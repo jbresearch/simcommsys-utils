@@ -221,8 +221,8 @@ class JobBatchSpec(BaseModel):
         if "executor_kwargs" in obj:
             raise ValueError("Cannot have executor_kwargs as field in job group.")
         # apply reflection, and place any additional keys in obj that are not a part of model into executor_kwargs
-        flds = list(cls.model_fields().keys())
-        obj["executor_kwargs"] = {k: obj.pop(k) for k in obj.keys() if k not in flds}
+        flds = set(cls.model_fields.keys())
+        obj["executor_kwargs"] = {k: obj.pop(k) for k in set(obj.keys()) - flds}
         return super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
@@ -330,9 +330,12 @@ class RunJobsSpec(BaseModel):
         obj["executor_type"] = obj["executor"].pop("type")
         obj["executor_kwargs"] = obj.pop("executor")
         # pass config_dir and groupname to every dict in objs[jobs]
-        for groupname in obj["jobs"].keys():
+        for groupname, group in obj["jobs"].items():
             obj["jobs"][groupname]["config_dir"] = obj["config_dir"]
             obj["jobs"][groupname]["groupname"] = groupname
+            obj["jobs"][groupname] = JobBatchSpec.model_validate(
+                group, strict=strict, from_attributes=from_attributes, context=context
+            )
         return super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
