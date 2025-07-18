@@ -249,7 +249,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         self,
         job: SimcommsysJob,
         simcommsys_tag: str,
-        simcommsys_type: str,
+        simcommsys_type: SimcommsysBuildType,
         port: int,
         workers: int,
         memlimit_gb: int | None,
@@ -269,7 +269,7 @@ timeout 30 sh -c 'until netcat -z localhost {port}; do sleep 1; done'
 for i in $(seq 1 {workers})
 do
     echo "Starting worker $i"
-    simcommsys.{simcommsys_tag}.{simcommsys_type} -e localhost:{port} 1>"{logfile}" 2>&1 &
+    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -e localhost:{port} 1>"{logfile}" 2>&1 &
 done
 """
         ulimit_cmd = ""
@@ -283,21 +283,21 @@ done
         # 5. Waits for the simcommsys server screen session to terminate or for the user to press Ctrl+C
         cmd = f"""set -e
 {ulimit_cmd}
-screen -d -m -S "{port}.{simcommsys_tag}.{simcommsys_type}" {simcommsys_cmd} -e :{port}
+screen -d -m -S "{port}.{simcommsys_tag}.{simcommsys_type.value}" {simcommsys_cmd} -e :{port}
 SERVER_PID=$!
 
 {launch_slaves}
 
 handler () {{
     echo 'Killing {job.name} server...'
-    screen -XS "{port}.{simcommsys_tag}.{simcommsys_type}" quit
+    screen -XS "{port}.{simcommsys_tag}.{simcommsys_type.value}" quit
 }}
 
 trap handler INT
 
 echo "Started simulation of {job.name} with {workers} workers."
 echo "Press Ctrl+C to interrupt..."
-while screen -list | grep -q "{port}.{simcommsys_tag}.{simcommsys_type}"
+while screen -list | grep -q "{port}.{simcommsys_tag}.{simcommsys_type.value}"
 do
     sleep 1
 done
@@ -332,7 +332,7 @@ done
         for job in jobs:
             # build command to submit to shell.
             cmd = self._get_cmd(
-                job, simcommsys_tag, simcommsys_type.value, port, workers, memlimit_gb
+                job, simcommsys_tag, simcommsys_type, port, workers, memlimit_gb
             )
             if dry_run:
                 print(cmd)
