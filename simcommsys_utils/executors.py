@@ -332,7 +332,7 @@ done
         for job in jobs:
             # build command to submit to shell.
             cmd = self._get_cmd(
-                job, simcommsys_tag, simcommsys_type, port, workers, memlimit_gb
+                job, simcommsys_tag, simcommsys_type.value, port, workers, memlimit_gb
             )
             if dry_run:
                 print(cmd)
