@@ -978,6 +978,8 @@ def run_jobs(
     selected_groups: set[str] = set(config.jobs.keys())
     if group is not None:
         selected_groups = set(group)
+    if not selected_groups:
+        print(f"Did not find any matching groups in input file: {config_file}")
 
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
