@@ -334,10 +334,11 @@ sequential<int,vector>
 #: input symbols - values
 1"""
 
-                fl.write(
-                    f"""commsys_simulator<{match.group(1)},{resultscollector}>
+                fl.write(f"""commsys_simulator<{match.group(1)}>
 # Version
-4
+5
+# Results collector
+{resultscollector}
 # Analyze all decode iterations?
 {1 if analyze_decode_iters else 0}
 {source}
