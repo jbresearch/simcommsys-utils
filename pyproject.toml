@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simcommsys-utils"
-version = "0.1.1"
+version = "0.1.2"
 description = "A package that aids in building, running and plotting results from Simcommsys systems, timers and simulations."
 authors = ["MarkMizzi <mizzimark2001@gmail.com>"]
 license = "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
