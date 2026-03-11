@@ -97,7 +97,7 @@ class JobBatchSpec(BaseModel):
     # Exactly one of params or param_ranges must be specified.
     params: list[list[float]] | None = None
     # List of strings containing parameter ranges.
-    # Simcommsys accepts parameter ranges which obey the syntax "<start>:<step>:<stop>:arithmetic" or "<start>:<step>:<stop>:geometric"
+    # Simcommsys accepts parameter ranges which obey the syntax "arithmetic:<start>:<step>:<stop>" or "geometric:<start>:<step>:<stop>"
     # where <start>, <step>, and <stop> are floats.
     # If specified, then each simulator file matched by rgx or glob is invoked a single time with the parameters specified in param_ranges.
     # Exactly one of params or param_ranges must be specified.
@@ -108,7 +108,7 @@ class JobBatchSpec(BaseModel):
                 StringConstraints(
                     # NOTE that this pattern enforces that strings given here are parseable by Simcommsys
                     # Must update when Simcommsys definition changes
-                    pattern=r"^((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((arithmetic)|(geometric))$"
+                    pattern=r"^((arithmetic)|(geometric)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+)):((\d+(.\d*)?)|(\d*.\d+))$"
                 ),
             ]
         ]
