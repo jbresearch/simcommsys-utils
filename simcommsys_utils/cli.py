@@ -56,7 +56,8 @@ def copy_binaries(
         str, typer.Option(help="Architecture of target machine.")
     ] = "x86_64",
     binary: Annotated[
-        List[str] | None, typer.Option(help="List of binaries to copy to remote.")
+        List[str] | None, typer.Option(
+            help="List of binaries to copy to remote.")
     ] = None,
     simcommsys_build_type: Annotated[
         List[SimcommsysBuildType] | None,
@@ -81,7 +82,8 @@ def copy_binaries(
                     shell=True,
                 )
             else:
-                logging.warning(f"{b}.{simcommsys_tag}.{t} not found, skipping...")
+                logging.warning(
+                    f"{b}.{simcommsys_tag}.{t} not found, skipping...")
 
 
 class InputMode(Enum):
@@ -111,7 +113,8 @@ class InputMode(Enum):
 @app.command()
 def make_simulators(
     input_dir: Annotated[
-        str, typer.Argument(help="Input directory containing Simcommsys system files.")
+        str, typer.Argument(
+            help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
         str,
@@ -366,7 +369,8 @@ sequential<int,vector>
 @app.command()
 def make_timers(
     input_dir: Annotated[
-        str, typer.Argument(help="Input directory containing Simcommsys system files.")
+        str, typer.Argument(
+            help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
         str,
@@ -470,7 +474,8 @@ class ExitChartSimulatorType(Enum):
 @app.command()
 def make_exit_chart_simulators(
     input_dir: Annotated[
-        str, typer.Argument(help="Input directory containing Simcommsys system files.")
+        str, typer.Argument(
+            help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
         str,
@@ -484,7 +489,8 @@ def make_exit_chart_simulators(
     ],
     system_param: Annotated[
         float,
-        typer.Option(help="Specify system parameter for the exit chart simulator."),
+        typer.Option(
+            help="Specify system parameter for the exit chart simulator."),
     ],
 ):
     """
@@ -672,7 +678,8 @@ clip
                         with open(
                             os.path.join(
                                 output_dir,
-                                os.path.basename(template_file).removesuffix(".txt")
+                                os.path.basename(
+                                    template_file).removesuffix(".txt")
                                 + "."
                                 + g
                                 + "."
@@ -731,7 +738,8 @@ def check_pchk(
     try:
         with open(input) as fl:
             # passing fl in as Iterable[str] allows for lazy loading, which when reading large flat files off of disk is handy.
-            PchkMatrix.read(fl, format, delimiter=delimiter, transpose=transpose)
+            PchkMatrix.read(fl, format, delimiter=delimiter,
+                            transpose=transpose)
     except Exception as e:
         print(f"Error while reading input file {input}: {e}")
         print(f"Ensure the input is a valid {format.value} file.")
@@ -962,7 +970,8 @@ def run_jobs(
         with open(config_file, "r") as fl:
             d = load(fl, Loader=Loader)
             config = RunJobsSpec.model_validate(
-                d | {"config_dir": os.path.realpath(os.path.dirname(config_file))}
+                d | {"config_dir": os.path.realpath(
+                    os.path.dirname(config_file))}
             )
 
     except ValidationError as e:

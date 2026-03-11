@@ -110,7 +110,8 @@ class PchkMatrix:
                     f"Non-integer value given for rows or cols: {lines[0]}"
                 )
 
-            max_col_non_zeros, max_row_non_zeros = re.split(r"\s+", lines[1], 1)
+            max_col_non_zeros, max_row_non_zeros = re.split(
+                r"\s+", lines[1], 1)
             try:
                 max_col_non_zeros, max_row_non_zeros = int(max_col_non_zeros), int(
                     max_row_non_zeros
@@ -155,7 +156,8 @@ class PchkMatrix:
                     pos, val = zip(*chunks(row, 2))
                     # do -1 as we use 0-based indexing
                     col_non_zero_pos.append(
-                        np.array(list(map(lambda x: int(x) - 1, pos)), dtype=np.int32)
+                        np.array(list(map(lambda x: int(x) - 1, pos)),
+                                 dtype=np.int32)
                     )
                     col_non_zero_val.append(
                         np.array(list(map(int, val)), dtype=np.int32)
@@ -173,7 +175,8 @@ class PchkMatrix:
                         row.pop()
 
                     col_non_zero_pos.append(
-                        np.array(list(map(lambda x: int(x) - 1, row)), dtype=np.int32)
+                        np.array(list(map(lambda x: int(x) - 1, row)),
+                                 dtype=np.int32)
                     )
 
                     line_cntr += 1
@@ -195,7 +198,8 @@ class PchkMatrix:
                     pos, val = zip(*chunks(row, 2))
                     # do -1 as we use 0-based indexing
                     row_non_zero_pos.append(
-                        np.array(list(map(lambda x: int(x) - 1, pos)), dtype=np.int32)
+                        np.array(list(map(lambda x: int(x) - 1, pos)),
+                                 dtype=np.int32)
                     )
                     row_non_zero_val.append(
                         np.array(list(map(int, val)), dtype=np.int32)
@@ -213,7 +217,8 @@ class PchkMatrix:
                         row.pop()
 
                     row_non_zero_pos.append(
-                        np.array(list(map(lambda x: int(x) - 1, row)), dtype=np.int32)
+                        np.array(list(map(lambda x: int(x) - 1, row)),
+                                 dtype=np.int32)
                     )
 
                     line_cntr += 1
@@ -315,7 +320,8 @@ class PchkMatrix:
         col_non_zero_val = []
 
         for c in range(cols):
-            col_non_zero_pos.append(cls.__read_simcommsys_vector(lines[line_cntr:]))
+            col_non_zero_pos.append(
+                cls.__read_simcommsys_vector(lines[line_cntr:]))
             # we use 0-based indices not 1-based.
             col_non_zero_pos[-1] = np.array(
                 list(map(lambda x: x - 1, col_non_zero_pos[-1]))
@@ -326,7 +332,8 @@ class PchkMatrix:
             ), f"Size of position vector for column {c}={col_non_zero_pos[-1]}, expected {col_non_zeros[c]}"
 
             if values_method == ValuesMethod.PROVIDED:
-                col_non_zero_val.append(cls.__read_simcommsys_vector(lines[line_cntr:]))
+                col_non_zero_val.append(
+                    cls.__read_simcommsys_vector(lines[line_cntr:]))
                 line_cntr += 2
                 assert (
                     col_non_zero_val[-1].shape[0] == col_non_zero_pos[-1].shape[0]
@@ -414,7 +421,7 @@ class PchkMatrix:
                 + "\n"
             )
 
-        return f"""# Length (n) 
+        return f"""# Length (n)
 {self.cols}
 # Number of parity checks (m)
 {self.rows}

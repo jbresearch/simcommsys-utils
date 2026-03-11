@@ -49,7 +49,8 @@ class Results:
         }
         return cls(
             simcommsys_build=d["Build"],
-            confidence_level=float(d["Confidence Level"].removesuffix("%")) / 100,
+            confidence_level=float(
+                d["Confidence Level"].removesuffix("%")) / 100,
             convergence_mode=d["Convergence Mode"],
             date=datetime.strptime(d["Date"], "%d %b %Y, %H:%M:%S"),
             system=d["System"],

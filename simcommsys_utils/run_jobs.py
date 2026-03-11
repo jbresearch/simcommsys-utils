@@ -55,7 +55,8 @@ def _is_dir(dir: str):
     Converts it to absolute dir if it does.
     """
     if not os.path.isdir(dir):
-        raise ValueError(f"Config directory {dir} does not exist or is not a directory")
+        raise ValueError(
+            f"Config directory {dir} does not exist or is not a directory")
     return os.path.realpath(dir)
 
 
@@ -155,7 +156,8 @@ class JobBatchSpec(BaseModel):
                 for name in files:
                     # make sure that filename we try to match is relative path to base_dir
                     if r.match(
-                        os.path.relpath(os.path.join(root, name), start=base_dir)
+                        os.path.relpath(os.path.join(
+                            root, name), start=base_dir)
                     ):
                         input_files.append(os.path.join(root, name))
 
@@ -178,7 +180,8 @@ class JobBatchSpec(BaseModel):
                     inputfile=jobfile,
                     outputfile=os.path.join(
                         self.output_dir,
-                        os.path.basename(jobfile).removesuffix(".txt") + ".json",
+                        os.path.basename(jobfile).removesuffix(
+                            ".txt") + ".json",
                     ),
                     param_ranges=self.param_ranges,
                     confidence=self.confidence,
@@ -219,15 +222,17 @@ class JobBatchSpec(BaseModel):
         Construct pydantic model from a dict
         """
         if "executor_kwargs" in obj:
-            raise ValueError("Cannot have executor_kwargs as field in job group.")
+            raise ValueError(
+                "Cannot have executor_kwargs as field in job group.")
         # apply reflection, and place any additional keys in obj that are not a part of model into executor_kwargs
         flds = set(cls.model_fields.keys())
-        obj["executor_kwargs"] = {k: obj.pop(k) for k in set(obj.keys()) - flds}
+        obj["executor_kwargs"] = {k: obj.pop(k)
+                                  for k in set(obj.keys()) - flds}
         return super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
 
-    ### Validators
+    # Validators
 
     @model_validator(mode="after")
     def check_inputs_specified(self) -> Self:

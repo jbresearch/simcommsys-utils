@@ -169,7 +169,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
     ):
-        nodelist = nodelist.split(",") if isinstance(nodelist, str) else nodelist
+        nodelist = nodelist.split(",") if isinstance(
+            nodelist, str) else nodelist
 
         index = 0
         for job in jobs:
@@ -255,7 +256,8 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
-        simcommsys_cmd = self._get_simcommsys_cmd(simcommsys_tag, simcommsys_type, job)
+        simcommsys_cmd = self._get_simcommsys_cmd(
+            simcommsys_tag, simcommsys_type, job)
 
         # logfile where output from workers will be stored.
         logfile = os.path.join(
@@ -326,7 +328,8 @@ done
         try:
             port = port if isinstance(port, int) else int(port)
         except ValueError:
-            logging.error(f"Invalid value supplied for port: {port}, must be integer.")
+            logging.error(
+                f"Invalid value supplied for port: {port}, must be integer.")
             exit(-1)
 
         for job in jobs:
@@ -369,7 +372,8 @@ class SlurmMasterSlaveSimcommsysExecutor(
         try:
             port = port if isinstance(port, int) else int(port)
         except ValueError:
-            logging.error(f"Invalid value supplied for port: {port}, must be integer.")
+            logging.error(
+                f"Invalid value supplied for port: {port}, must be integer.")
             exit(-1)
 
         index = 0
@@ -377,7 +381,8 @@ class SlurmMasterSlaveSimcommsysExecutor(
             self._run_slurm(
                 job.name,
                 job.outputfile,
-                self._get_cmd(job, simcommsys_tag, simcommsys_type, port, workers),
+                self._get_cmd(job, simcommsys_tag,
+                              simcommsys_type, port, workers),
                 index,
                 dry_run=dry_run,
                 gres=gres,
