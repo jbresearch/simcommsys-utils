@@ -906,7 +906,7 @@ def run_jobs(
             params: <list of list of float>
             # List of strings containing parameter ranges.
             # Simcommsys accepts parameter ranges which obey the syntax
-            # "<start>:<step>:<stop>:arithmetic" or "<start>:<step>:<stop>:geometric"
+            # "arithmetic:<start>:<step>:<stop>" or "geometric:<start>:<step>:<stop>"
             # where <start>, <step>, and <stop> are floats.
             # If specified, then each simulator file matched by rgx or glob is
             # invoked a single time with the parameters specified in param_ranges.
