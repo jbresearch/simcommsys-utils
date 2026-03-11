@@ -21,7 +21,7 @@ jobs:
     rgx: "Simulators/masterslave.errors_hamming-random-qsc.*\\.txt"
     output_dir: ../Results
     param_ranges:
-      - "0.01:0.1:0.001:geometric"
+      - "geometric:0.01:0.1:0.001"
     confidence: 0.95
     relative_error: 0.05
     floor_min: 1e-3
