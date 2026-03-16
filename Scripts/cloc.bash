@@ -16,7 +16,7 @@ while getopts 'h' opt; do
     esac
 done
 
-SCRIPT_DIR=`realpath $(dirname ${BASH_SOURCE[0]})`
+SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 BASE_DIR="${SCRIPT_DIR}/.."
 
 cd ${BASE_DIR}
