@@ -246,7 +246,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
 
 class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
 
-    def _get_cmd(
+    def _get_masterslave_cmd(
         self,
         job: SimcommsysJob,
         simcommsys_tag: str,
@@ -334,7 +334,7 @@ done
 
         for job in jobs:
             # build command to submit to shell.
-            cmd = self._get_cmd(
+            cmd = self._get_masterslave_cmd(
                 job, simcommsys_tag, simcommsys_type, port, workers, memlimit_gb
             )
             if dry_run:
@@ -381,8 +381,8 @@ class SlurmMasterSlaveSimcommsysExecutor(
             self._run_slurm(
                 job.name,
                 job.outputfile,
-                self._get_cmd(job, simcommsys_tag,
-                              simcommsys_type, port, workers),
+                self._get_masterslave_cmd(job, simcommsys_tag,
+                                          simcommsys_type, port, workers),
                 index,
                 dry_run=dry_run,
                 gres=gres,
