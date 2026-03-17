@@ -83,11 +83,14 @@ class SimcommsysExecutor(abc.ABC):
             param_ranges += f"--param-range {prange}"
 
         return f"simcommsys.{simcommsys_tag}.{simcommsys_type.value} \
-                    -i {job.inputfile} -o {job.outputfile} \
+                    -i {job.inputfile} \
+                    -o {job.outputfile} \
                     {param_ranges} \
-                    --confidence {job.confidence} --relative-error {job.relative_error} \
+                    --confidence {job.confidence} \
+                    --relative-error {job.relative_error} \
                     --floor-min {job.floor_min} \
-                    -f json"
+                    -f json \
+                    -q"
 
     @abc.abstractmethod
     def run(
