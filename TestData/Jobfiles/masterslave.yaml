@@ -13,7 +13,7 @@ jobs:
     relative_error: 0.1
     floor_min: 0.5e-3
     # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: development
+    simcommsys_tag: v1.2.3-1063-g85875156-dirty.sierraforest-omp-mpi-gmp-cuda120
     simcommsys_type: release
     memlimit_gb: 4
   group2:
@@ -26,5 +26,5 @@ jobs:
     relative_error: 0.05
     floor_min: 1e-3
     # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: development-omp-mpi-gmp-cuda89
+    simcommsys_tag: v1.2.3-1063-g85875156-dirty.sierraforest-omp-mpi-gmp-cuda120
     simcommsys_type: release

@@ -5,6 +5,10 @@ set -e
 SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 cd "${SCRIPT_DIR}/.."
 
+# NOTE: SIMCOMMSYS_TAG probably has to be changed on your system.
+SIMCOMMSYS_TAG=v1.2.3-1063-g85875156-dirty.sierraforest-omp-mpi-gmp-cuda120
+
+
 echo "TEST CASE 1"
 echo "==========="
 echo "Testing conversion between parity check matrix formats ..."
@@ -41,15 +45,13 @@ echo
 echo "TEST CASE 3"
 echo "==========="
 echo "Testing generation of simulator and timer files ..."
-# NOTE: --simcommsys-tag probably has to be changed on your system.
 poetry run simcommsys-utils make-simulators \
     --resultscollector errors_hamming --input-mode random --analyze-decode-iters \
-    --simcommsys-tag development-omp-mpi-gmp-cuda89 \
+    --simcommsys-tag ${SIMCOMMSYS_TAG} \
     TestData/Systems TestData/Simulators
 echo "Generation of Simcommsys simulator files OK."
-# NOTE: --simcommsys-tag probably has to be changed on your system.
 poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers \
-    --simcommsys-tag development-omp-mpi-gmp-cuda89
+    --simcommsys-tag ${SIMCOMMSYS_TAG}
 echo "Generation of Simcommsys timer files OK."
 
 echo
