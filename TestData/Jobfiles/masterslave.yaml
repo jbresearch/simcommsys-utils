@@ -19,7 +19,7 @@ jobs:
   group2:
     base_dir: ..
     rgx: "Simulators/masterslave.errors_hamming-random-qsc.*\\.txt"
-    output_dir: ../Results
+    output_dir: Results
     param_ranges:
       - "geometric:0.01:0.1:0.001"
     confidence: 0.95
