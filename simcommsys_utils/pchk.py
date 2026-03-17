@@ -94,7 +94,7 @@ class PchkMatrix:
         if transpose:
             H = H.T
         io = BytesIO()
-        np.savetxt(io, H, delimiter=delimiter)
+        np.savetxt(io, H, fmt='%d', delimiter=delimiter)
         return io.getvalue().decode()
 
     @classmethod
