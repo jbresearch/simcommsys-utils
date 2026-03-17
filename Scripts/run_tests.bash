@@ -6,7 +6,7 @@ SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 cd "${SCRIPT_DIR}/.."
 
 # NOTE: SIMCOMMSYS_TAG probably has to be changed on your system.
-SIMCOMMSYS_TAG=v1.2.3-1063-g85875156-dirty.sierraforest-omp-mpi-gmp-cuda120
+SIMCOMMSYS_TAG=v1.2.3-1063-g85875156-dirty.sierraforest
 
 
 echo "TEST CASE 1"
@@ -66,6 +66,7 @@ poetry run simcommsys-utils run-jobs \
     --config-file TestData/Jobfiles/local.yaml \
     --group group2
 
+exit 1
 echo
 echo "TEST CASE 5"
 echo "==========="
