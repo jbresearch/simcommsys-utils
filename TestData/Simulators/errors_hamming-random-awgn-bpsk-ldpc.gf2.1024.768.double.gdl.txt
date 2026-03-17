@@ -1,8 +1,14 @@
-commsys_simulator<sigspace,errors_hamming>
+commsys_simulator<sigspace>
 # Version
-2
-# Input mode (0=zero, 1=random, 2=user[seq])
+5
+# Results collector
+errors_hamming
+# Analyze all decode iterations?
 1
+# Input data source
+uniform<int,vector>
+## Alphabet size
+2
 # Communication system
 commsys<sigspace,vector>
 # Version
@@ -31,7 +37,7 @@ clip
 1e-38
 # Reduce generator matrix to REF? (true|false)
 0
-# Length (n) 
+# Length (n)
 1024
 # Number of parity checks (m)
 768
@@ -2098,4 +2104,3 @@ random
 248 717
 2
 302 720
-

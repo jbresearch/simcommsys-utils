@@ -1,10 +1,12 @@
-commsys_simulator<gf4,errors_hamming>
+commsys_simulator<gf4>
 # Version
-4
+5
+# Results collector
+errors_hamming
 # Analyze all decode iterations?
 0
-# Input source
-uniform<int, vector>
+# Input data source
+uniform<int,vector>
 ## Alphabet size
 2
 # Communication system
@@ -33,7 +35,7 @@ clip
 1e-38
 # Reduce generator matrix to REF? (true|false)
 0
-# Length (n) 
+# Length (n)
 1024
 # Number of parity checks (m)
 768
@@ -2100,4 +2102,3 @@ random
 248 717
 2
 302 720
-
