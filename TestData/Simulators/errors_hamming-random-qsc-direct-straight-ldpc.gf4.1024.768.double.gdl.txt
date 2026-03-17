@@ -8,7 +8,7 @@ errors_hamming
 # Input data source
 uniform<int,vector>
 ## Alphabet size
-2
+4
 # Communication system
 commsys<gf4,vector>
 # Version
