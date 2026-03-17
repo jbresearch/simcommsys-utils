@@ -1,6 +1,5 @@
 executor:
   type: masterslave
-  workers: 4
 jobs:
   group1:
     base_dir: ../Simulators
@@ -16,6 +15,7 @@ jobs:
     simcommsys_tag: v1.2.3-1063-g85875156-dirty.sierraforest
     simcommsys_type: release
     memlimit_gb: 4
+    workers: 4
   group2:
     base_dir: ..
     rgx: "Simulators/masterslave.errors_hamming-random-qsc.*\\.txt"
