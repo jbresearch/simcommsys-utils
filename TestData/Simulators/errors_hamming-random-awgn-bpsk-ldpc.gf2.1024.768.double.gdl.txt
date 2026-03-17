@@ -4,7 +4,7 @@ commsys_simulator<sigspace>
 # Results collector
 errors_hamming
 # Analyze all decode iterations?
-1
+0
 # Input data source
 uniform<int,vector>
 ## Alphabet size
