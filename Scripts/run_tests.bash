@@ -66,7 +66,6 @@ poetry run simcommsys-utils run-jobs \
     --config-file TestData/Jobfiles/local.yaml \
     --group group2
 
-exit 1
 echo
 echo "TEST CASE 5"
 echo "==========="
