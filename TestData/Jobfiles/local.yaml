@@ -14,7 +14,7 @@ jobs:
     relative_error: 0.1
     floor_min: 0.5e-3
     # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: v1.2.3-1063-g85875156-dirty.sierraforest
+    simcommsys_tag: v1.2.3-1065-g6e37b8c8.sierraforest
     simcommsys_type: release
     memlimit_gb: 4
   group2:
@@ -28,5 +28,5 @@ jobs:
     relative_error: 0.05
     floor_min: 1e-3
     # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: v1.2.3-1063-g85875156-dirty.sierraforest
+    simcommsys_tag: v1.2.3-1065-g6e37b8c8.sierraforest
     simcommsys_type: release
