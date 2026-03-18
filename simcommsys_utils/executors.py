@@ -26,20 +26,22 @@ import os
 from enum import Enum
 
 
-def _run_local_cmd_wrapper(job_descriptor: tuple[str, str]):
-    cmd, logfile = job_descriptor
-    _run_local_cmd(cmd, logfile)
+def _run_local_cmd_wrapper(job_command: tuple[str, SimcommsysJob]):
+    cmd, job = job_command
+    _run_local_cmd(cmd, job)
 
 
-def _run_local_cmd(cmd: str, logfile: str):
+def _run_local_cmd(cmd: str, job: SimcommsysJob):
     """
     Run a command using subprocess. Command is run in a shell and we error out on failure.
     """
     logging.debug(cmd)
     try:
-        with open(logfile, "a") as fid:
+        print(f"Starting local simulation of {job.name}.")
+        with open(job.logfile, "a") as fid:
             subprocess.run(cmd, shell=True, check=True,
                            stdout=fid, stderr=subprocess.STDOUT)
+        print(f"Finished local simulation of {job.name}.")
     except CalledProcessError as e:
         # catch error in subprocess and print useful human readable info.
         # TODO: check if this is still useful now that we redirect output
@@ -232,7 +234,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         *,
         memlimit_gb: int | None = None,
     ):
-        job_descriptors = []
+        job_commands = []
         for job in jobs:
             # build command to submit to shell.
             simcommsys_cmd = self._get_simcommsys_cmd(
@@ -242,18 +244,18 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
             cmd += f"{simcommsys_cmd} -e local"
-            job_descriptors.append((cmd, job.logfile))
+            job_commands.append((cmd, job))
 
         if dry_run:
-            for cmd in job_descriptors:
+            for cmd in job_commands:
                 print(cmd)
-        elif self.workers == 1 or len(job_descriptors) == 1:
+        elif self.workers == 1 or len(job_commands) == 1:
             # There is no point in using multiprocessing as there is only one command or one worker.
-            for cmd, logfile in job_descriptors:
-                _run_local_cmd(cmd, logfile)
+            for cmd, job in job_commands:
+                _run_local_cmd(cmd, job.logfile)
         else:
             with multiprocessing.Pool(processes=self.workers) as p:
-                p.map(_run_local_cmd_wrapper, job_descriptors)
+                p.map(_run_local_cmd_wrapper, job_commands)
 
 
 class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
