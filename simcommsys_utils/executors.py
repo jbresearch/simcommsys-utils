@@ -198,7 +198,7 @@ timeout 30 sh -c 'until netcat -z localhost {port}; do sleep 1; done'
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
     echo "Starting worker $i"
-    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
+    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -q -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
 done
 
 handler () {{
