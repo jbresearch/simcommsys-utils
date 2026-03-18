@@ -26,39 +26,6 @@ import os
 from enum import Enum
 
 
-def _run_local_cmd_wrapper(job_command: tuple[str, SimcommsysJob]):
-    cmd, job = job_command
-    _run_local_cmd(cmd, job)
-
-
-def _run_local_cmd(cmd: str, job: SimcommsysJob):
-    """
-    Run a command using subprocess. Command is run in a shell and we error out on failure.
-    """
-    logging.debug(cmd)
-    try:
-        print(f"Starting local simulation of {job.name}.")
-        with open(job.logfile, "a") as fid:
-            subprocess.run(cmd, shell=True, check=True,
-                           stdout=fid, stderr=subprocess.STDOUT)
-        print(f"Finished local simulation of {job.name}.")
-    except CalledProcessError as e:
-        # catch error in subprocess and print useful human readable info.
-        # TODO: check if this is still useful now that we redirect output
-        logging.error(str(e))
-        if e.stderr:
-            logging.error(f"stderr of failed process is:")
-            for line in e.stderr.split("\n"):
-                logging.error(f"\t{line}")
-        if e.output:
-            logging.error(f"stdout of failed process is:")
-            for line in e.output.split("\n"):
-                logging.error(f"\t{line}")
-
-        # crash since one of the jobs failed.
-        exit(-1)
-
-
 class SimcommsysBuildType(str, Enum):
     DEBUG = "debug"
     RELEASE = "release"
@@ -219,6 +186,39 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
             # update node index so that we allocate to every node in nodelist.
             if nodelist:
                 index = (index + 1) % len(nodelist)
+
+
+def _run_local_cmd_wrapper(job_command: tuple[str, SimcommsysJob]):
+    cmd, job = job_command
+    _run_local_cmd(cmd, job)
+
+
+def _run_local_cmd(cmd: str, job: SimcommsysJob):
+    """
+    Run a command using subprocess. Command is run in a shell and we error out on failure.
+    """
+    logging.debug(cmd)
+    try:
+        print(f"Starting local simulation of {job.name}.")
+        with open(job.logfile, "a") as fid:
+            subprocess.run(cmd, shell=True, check=True,
+                           stdout=fid, stderr=subprocess.STDOUT)
+        print(f"Finished local simulation of {job.name}.")
+    except CalledProcessError as e:
+        # catch error in subprocess and print useful human readable info.
+        # TODO: check if this is still useful now that we redirect output
+        logging.error(str(e))
+        if e.stderr:
+            logging.error(f"stderr of failed process is:")
+            for line in e.stderr.split("\n"):
+                logging.error(f"\t{line}")
+        if e.output:
+            logging.error(f"stdout of failed process is:")
+            for line in e.output.split("\n"):
+                logging.error(f"\t{line}")
+
+        # crash since one of the jobs failed.
+        exit(-1)
 
 
 class LocalSimcommsysExecutor(SimcommsysExecutor):
