@@ -118,7 +118,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
     def _run_slurm(
         self,
         job_name: str,
-        job_outputfile: str,
+        job_logfile: str,
         wrapped_command: str,
         node_index: int,
         dry_run: bool = False,
@@ -143,8 +143,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --cpus-per-task={cpus_per_task} \
                         --mem-per-cpu={memlimit_gb}G \
                         --time={timeout_mins} \
-                        --output={os.path.basename(job_outputfile).removesuffix('.json')}.out \
-                        --error={os.path.basename(job_outputfile).removesuffix('.json')}.err \
+                        --output={job_logfile} \
+                        --error={job_logfile} \
                         --account={self.account} \
                         --mail-type=all"
 
@@ -180,7 +180,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         for job in jobs:
             _run_slurm_args = dict(
                 job_name=job.name,
-                job_outputfile=job.outputfile,
+                job_logfile=job.logfile,
                 wrapped_command=self._get_simcommsys_cmd(
                     simcommsys_tag, simcommsys_type, job
                 )
@@ -385,7 +385,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         for job in jobs:
             self._run_slurm(
                 job.name,
-                job.outputfile,
+                job.logfile,
                 self._get_masterslave_cmd(job, simcommsys_tag,
                                           simcommsys_type, port, workers),
                 index,
