@@ -146,10 +146,10 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --output={os.path.basename(job_outputfile).removesuffix('.json')}.out \
                         --error={os.path.basename(job_outputfile).removesuffix('.json')}.err \
                         --account={self.account} \
-                        --mail-type=all "
+                        --mail-type=all"
 
         if gres:
-            sbatch_opts += f"--gres={','.join(gres)}"
+            sbatch_opts += f" --gres={','.join(gres)}"
         if nodename:
             sbatch_opts += f" --nodelist={nodename}"
         cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
