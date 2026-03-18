@@ -87,7 +87,7 @@ class JobBatchSpec(BaseModel):
     # One of glob or rgx must be specified.
     # If both are specified, rgx takes precedent and glob is ignored.
     glob: str | None = None
-    # Output directory for Simcommsys runs.
+    # Output directory for Simcommsys results.
     # If not absolute, the output directory is considered relative to config_dir.
     # Must be specified.
     output_dir: str

@@ -102,7 +102,7 @@ class SimcommsysExecutor(abc.ABC):
         **jobparams,
     ):
         """
-        Runs several simcommsys simulations on a remote.
+        Runs several simcommsys simulations.
         """
         raise NotImplementedError
 
@@ -232,7 +232,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             cmd = ""
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
-            cmd = f"{cmd}{simcommsys_cmd} -e local"
+            cmd += f"{simcommsys_cmd} -e local"
             cmds.append(cmd)
 
         if dry_run:
