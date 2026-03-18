@@ -6,7 +6,7 @@ SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 cd "${SCRIPT_DIR}/.."
 
 # NOTE: SIMCOMMSYS_TAG probably has to be changed on your system.
-SIMCOMMSYS_TAG=v1.2.3-1065-g6e37b8c8.sierraforest
+SIMCOMMSYS_TAG=v1.2.3-1066-g963735c3.sierraforest
 
 
 echo "TEST CASE 1"
