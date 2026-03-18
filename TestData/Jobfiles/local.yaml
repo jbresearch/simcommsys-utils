@@ -23,7 +23,7 @@ jobs:
     output_dir: Results
     log_dir: Logs
     param_ranges:
-      - "geometric:0.01:0.1:0.001"
+      - "geometric:0.1:0.1:0.01"
     confidence: 0.95
     relative_error: 0.05
     floor_min: 1e-3
