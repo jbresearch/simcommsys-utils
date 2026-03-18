@@ -170,7 +170,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_cmd = self._get_simcommsys_cmd(
             simcommsys_tag, simcommsys_type, job)
         # logfile where output from workers will be stored.
-        logfile = os.path.join(
+        worker_logfile = os.path.join(
             os.path.dirname(job.logfile),
             f"{os.path.splitext(os.path.basename(job.logfile))[0]}-w$i.log"
         )
@@ -187,31 +187,30 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
 echo "Starting simulation of {job.name} with {workers} workers."
 
 {ulimit_cmd}
-screen -d -m -S "{port}.{simcommsys_tag}.{simcommsys_type.value}" {simcommsys_cmd} -e :{port}
+
+# Launch the server in the background
+{simcommsys_cmd} -e :{port} 1>"{job.logfile}" 2>&1 &
 SERVER_PID=$!
 
 # Wait for server to open its port
 timeout 30 sh -c 'until netcat -z localhost {port}; do sleep 1; done'
 
-# Launch the workers in the bg
-for i in $(seq 1 {workers})
-do
+# Launch the workers in the background
+for i in $(seq 1 {workers}); do
     echo "Starting worker $i"
-    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -e localhost:{port} 1>"{logfile}" 2>&1 &
+    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
 done
 
 handler () {{
     echo 'Killing {job.name} server...'
-    screen -XS "{port}.{simcommsys_tag}.{simcommsys_type.value}" quit
+    kill $SERVER_PID
 }}
 
 trap handler INT
 echo "Press Ctrl+C to interrupt..."
 
-while screen -list | grep -q "{port}.{simcommsys_tag}.{simcommsys_type.value}"
-do
-    sleep 1
-done
+wait $SERVER_PID
+echo "Finished simulation of {job.name} with {workers} workers."
 """
         return cmd
 
