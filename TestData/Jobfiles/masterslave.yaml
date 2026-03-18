@@ -3,7 +3,7 @@ executor:
 jobs:
   group1:
     base_dir: ../Simulators
-    glob: "masterslave.errors_hamming-random-awgn*.txt"
+    glob: "masterslave-errors_hamming-random-awgn*.txt"
     output_dir: ../Results
     log_dir: ../Logs
     params:
@@ -19,7 +19,7 @@ jobs:
     workers: 4
   group2:
     base_dir: ..
-    rgx: "Simulators/masterslave.errors_hamming-random-qsc.*\\.txt"
+    rgx: "Simulators/masterslave-errors_hamming-random-qsc.*\\.txt"
     output_dir: Results
     log_dir: Logs
     param_ranges:
