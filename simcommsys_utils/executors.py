@@ -85,109 +85,6 @@ class SimcommsysExecutor(abc.ABC):
         raise NotImplementedError
 
 
-class SlurmSimcommsysExecutor(SimcommsysExecutor):
-    def __init__(self, *, email: str, account: str, cancel_on_failure: bool = True):
-        # SLURM specific global options.
-        self.email = email
-        self.account = account
-        self.cancel_on_failure = cancel_on_failure
-
-    def _run_slurm(
-        self,
-        job_name: str,
-        job_logfile: str,
-        wrapped_command: str,
-        node_index: int,
-        dry_run: bool = False,
-        *,
-        partition: str,
-        gres: list[str] | None,
-        memlimit_gb: int,
-        timeout_mins: int,
-        nodelist: list[str] | str | None,
-        cpus_per_task: int = 1,
-    ):
-        """
-        Run a command as a slurm job using --wrap
-        """
-
-        # build sbatch command for this job
-        nodename = nodelist[node_index] if nodelist else None
-        sbatch_opts = f"--mail-user={self.email} \
-                        --job-name={job_name} \
-                        --partition={partition} \
-                        --ntasks=1 \
-                        --cpus-per-task={cpus_per_task} \
-                        --mem-per-cpu={memlimit_gb}G \
-                        --time={timeout_mins} \
-                        --output={job_logfile} \
-                        --error={job_logfile} \
-                        --account={self.account} \
-                        --mail-type=all"
-
-        if gres:
-            sbatch_opts += f" --gres={','.join(gres)}"
-        if nodename:
-            sbatch_opts += f" --nodelist={nodename}"
-        cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
-
-        if dry_run:
-            print(cmd)
-        else:
-            logging.debug(cmd)
-            subprocess.run(cmd, shell=True, check=self.cancel_on_failure)
-
-    def run(  # type:ignore
-        self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
-        jobs: list[SimcommsysJob],
-        dry_run: bool = False,
-        *,
-        partition: str,
-        gres: list[str] | None = None,
-        memlimit_gb: int,
-        timeout_mins: int,
-        nodelist: list[str] | str | None = None,
-    ):
-        nodelist = nodelist.split(",") if isinstance(
-            nodelist, str) else nodelist
-
-        index = 0
-        for job in jobs:
-            _run_slurm_args = dict(
-                job_name=job.name,
-                job_logfile=job.logfile,
-                wrapped_command=self._get_simcommsys_cmd(
-                    simcommsys_tag, simcommsys_type, job
-                )
-                + " -e local",
-                node_index=index,
-                dry_run=dry_run,
-                partition=partition,
-                gres=gres,
-                memlimit_gb=memlimit_gb,
-                timeout_mins=timeout_mins,
-                nodelist=nodelist,
-            )
-            if self.cancel_on_failure:
-                try:
-                    self._run_slurm(**_run_slurm_args)
-                except Exception as e:
-                    # cancel all jobs in this group which have already been scheduled
-                    for job in jobs:
-                        subprocess.run(
-                            f"scancel --name={job.name}", shell=True, check=False
-                        )
-                    raise e
-            else:
-                self._run_slurm(**_run_slurm_args)
-
-            # update node index so that we allocate to every node in nodelist.
-            if nodelist:
-                index = (index + 1) % len(nodelist)
-
-
 def _run_local_cmd_wrapper(job_command: tuple[str, SimcommsysJob]):
     cmd, job = job_command
     _run_local_cmd(cmd, job)
@@ -354,6 +251,109 @@ done
             else:
                 logging.debug(cmd)
                 subprocess.run(cmd, shell=True, check=True)
+
+
+class SlurmSimcommsysExecutor(SimcommsysExecutor):
+    def __init__(self, *, email: str, account: str, cancel_on_failure: bool = True):
+        # SLURM specific global options.
+        self.email = email
+        self.account = account
+        self.cancel_on_failure = cancel_on_failure
+
+    def _run_slurm(
+        self,
+        job_name: str,
+        job_logfile: str,
+        wrapped_command: str,
+        node_index: int,
+        dry_run: bool = False,
+        *,
+        partition: str,
+        gres: list[str] | None,
+        memlimit_gb: int,
+        timeout_mins: int,
+        nodelist: list[str] | str | None,
+        cpus_per_task: int = 1,
+    ):
+        """
+        Run a command as a slurm job using --wrap
+        """
+
+        # build sbatch command for this job
+        nodename = nodelist[node_index] if nodelist else None
+        sbatch_opts = f"--mail-user={self.email} \
+                        --job-name={job_name} \
+                        --partition={partition} \
+                        --ntasks=1 \
+                        --cpus-per-task={cpus_per_task} \
+                        --mem-per-cpu={memlimit_gb}G \
+                        --time={timeout_mins} \
+                        --output={job_logfile} \
+                        --error={job_logfile} \
+                        --account={self.account} \
+                        --mail-type=all"
+
+        if gres:
+            sbatch_opts += f" --gres={','.join(gres)}"
+        if nodename:
+            sbatch_opts += f" --nodelist={nodename}"
+        cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
+
+        if dry_run:
+            print(cmd)
+        else:
+            logging.debug(cmd)
+            subprocess.run(cmd, shell=True, check=self.cancel_on_failure)
+
+    def run(  # type:ignore
+        self,
+        simcommsys_tag: str,
+        simcommsys_type: SimcommsysBuildType,
+        jobs: list[SimcommsysJob],
+        dry_run: bool = False,
+        *,
+        partition: str,
+        gres: list[str] | None = None,
+        memlimit_gb: int,
+        timeout_mins: int,
+        nodelist: list[str] | str | None = None,
+    ):
+        nodelist = nodelist.split(",") if isinstance(
+            nodelist, str) else nodelist
+
+        index = 0
+        for job in jobs:
+            _run_slurm_args = dict(
+                job_name=job.name,
+                job_logfile=job.logfile,
+                wrapped_command=self._get_simcommsys_cmd(
+                    simcommsys_tag, simcommsys_type, job
+                )
+                + " -e local",
+                node_index=index,
+                dry_run=dry_run,
+                partition=partition,
+                gres=gres,
+                memlimit_gb=memlimit_gb,
+                timeout_mins=timeout_mins,
+                nodelist=nodelist,
+            )
+            if self.cancel_on_failure:
+                try:
+                    self._run_slurm(**_run_slurm_args)
+                except Exception as e:
+                    # cancel all jobs in this group which have already been scheduled
+                    for job in jobs:
+                        subprocess.run(
+                            f"scancel --name={job.name}", shell=True, check=False
+                        )
+                    raise e
+            else:
+                self._run_slurm(**_run_slurm_args)
+
+            # update node index so that we allocate to every node in nodelist.
+            if nodelist:
+                index = (index + 1) % len(nodelist)
 
 
 class SlurmMasterSlaveSimcommsysExecutor(
