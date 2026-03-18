@@ -274,7 +274,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         # logfile where output from workers will be stored.
         logfile = os.path.join(
             os.path.dirname(job.logfile),
-            f"{os.path.splitext(os.path.basename(job.logfile))[0]}.$i.log"
+            f"{os.path.splitext(os.path.basename(job.logfile))[0]}-w$i.log"
         )
         launch_slaves = f"""
 # Wait for server to open its port
