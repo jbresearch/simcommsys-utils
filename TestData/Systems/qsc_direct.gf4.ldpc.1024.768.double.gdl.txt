@@ -1,15 +1,3 @@
-commsys_simulator<gf4>
-# Version
-5
-# Results collector
-errors_hamming
-# Analyze all decode iterations?
-0
-# Input data source
-uniform<int,vector>
-## Alphabet size
-4
-# Communication system
 commsys<gf4,vector>
 # Version
 1

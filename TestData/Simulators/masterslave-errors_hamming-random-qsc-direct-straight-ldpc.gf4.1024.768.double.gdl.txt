@@ -1,1 +1,0 @@
-errors_hamming-random-qsc-direct-straight-ldpc.gf4.1024.768.double.gdl.txt
