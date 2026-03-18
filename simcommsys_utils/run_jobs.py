@@ -91,6 +91,10 @@ class JobBatchSpec(BaseModel):
     # If not absolute, the output directory is considered relative to config_dir.
     # Must be specified.
     output_dir: str
+    # Output directory for Simcommsys logs.
+    # If not absolute, the output directory is considered relative to config_dir.
+    # Must be specified.
+    log_dir: str
     # List of parameter combinations.
     # If specified, then for every simulator file matched by rgx or glob,
     # an individual Simcommsys run is invoked with every parameter combination in params.
@@ -182,6 +186,11 @@ class JobBatchSpec(BaseModel):
                         os.path.basename(jobfile).removesuffix(
                             ".txt") + ".json",
                     ),
+                    logfile=os.path.join(
+                        self.log_dir,
+                        os.path.basename(jobfile).removesuffix(
+                            ".txt") + ".log",
+                    ),
                     param_ranges=self.param_ranges,
                     confidence=self.confidence,
                     relative_error=self.relative_error,
@@ -203,6 +212,13 @@ class JobBatchSpec(BaseModel):
                         + "."
                         + ":".join(map(lambda p: f"{p:e}", pset))
                         + ".json",
+                    ),
+                    logfile=os.path.join(
+                        self.log_dir,
+                        os.path.basename(jobfile).removesuffix(".txt")
+                        + "."
+                        + ":".join(map(lambda p: f"{p:e}", pset))
+                        + ".log",
                     ),
                     param_ranges=[f"arithmetic:{p}:1:{p+1}" for p in pset],
                     confidence=self.confidence,

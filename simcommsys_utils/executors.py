@@ -60,6 +60,7 @@ class SimcommsysJob:
     name: str
     inputfile: str
     outputfile: str
+    logfile: str
     param_ranges: list[str]
     confidence: float
     relative_error: float
@@ -264,7 +265,8 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
 
         # logfile where output from workers will be stored.
         logfile = os.path.join(
-            os.path.dirname(job.outputfile), f"worker-$i.{job.name}.log"
+            os.path.dirname(job.logfile),
+            f"{os.path.splitext(os.path.basename(job.logfile))[0]}.$i.log"
         )
         launch_slaves = f"""
 # Wait for server to open its port
