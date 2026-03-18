@@ -204,20 +204,20 @@ class JobBatchSpec(BaseModel):
                 SimcommsysJob(
                     name=os.path.basename(jobfile.removesuffix(".txt"))
                     + "."
-                    + ":".join(map(lambda p: f"{p:e}", pset)),
+                    + ":".join(map(lambda p: f"{p:g}", pset)),
                     inputfile=jobfile,
                     outputfile=os.path.join(
                         self.output_dir,
                         os.path.basename(jobfile).removesuffix(".txt")
                         + "."
-                        + ":".join(map(lambda p: f"{p:e}", pset))
+                        + ":".join(map(lambda p: f"{p:g}", pset))
                         + ".json",
                     ),
                     logfile=os.path.join(
                         self.log_dir,
                         os.path.basename(jobfile).removesuffix(".txt")
                         + "."
-                        + ":".join(map(lambda p: f"{p:e}", pset))
+                        + ":".join(map(lambda p: f"{p:g}", pset))
                         + ".log",
                     ),
                     param_ranges=[f"arithmetic:{p}:1:{p+1}" for p in pset],
