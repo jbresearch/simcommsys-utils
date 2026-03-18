@@ -264,11 +264,13 @@ class JobBatchSpec(BaseModel):
     @model_validator(mode="after")
     def check_dirs_exists(self) -> Self:
         """
-        Checks that 'base_dir' and 'output_dir' exist and convert them to absolute paths.
+        Checks that 'base_dir', 'output_dir' and 'log_dir' exist and convert
+        them to absolute paths.
 
-        Note that if 'base_dir' is relative, we consider it relative to 'config_dir'.
-        If 'base_dir' is not given, we set it to 'config_dir'.
-        If 'output_dir' is relative, we consider it relative to 'base_dir'.
+        Note that if 'base_dir' is relative, we consider it relative to
+        'config_dir'. If 'base_dir' is not given, we set it to 'config_dir'. If
+        'output_dir' or 'log_dir' are relative, we consider them relative to
+        'base_dir'.
         """
 
         if self.base_dir is not None:
@@ -290,6 +292,15 @@ class JobBatchSpec(BaseModel):
         if not os.path.isdir(self.output_dir):
             raise ValueError(
                 f"Output directory {self.output_dir} does not exist or is not a directory"
+            )
+
+        # make log_dir absolute if it is not
+        if not os.path.isabs(self.log_dir):
+            self.log_dir = os.path.join(self.base_dir, self.log_dir)
+        # check that log_dir exists
+        if not os.path.isdir(self.log_dir):
+            raise ValueError(
+                f"Output directory {self.log_dir} does not exist or is not a directory"
             )
         return self
 
