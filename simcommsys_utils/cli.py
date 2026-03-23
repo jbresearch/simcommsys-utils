@@ -36,7 +36,7 @@ except ImportError:
 
 from simcommsys_utils.run_jobs import RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
-from simcommsys_utils.executors import SimcommsysBuildType
+from simcommsys_utils.executors import SimcommsysBuildConfig
 
 app = typer.Typer()
 
@@ -60,7 +60,7 @@ def copy_binaries(
             help="List of binaries to copy to remote.")
     ] = None,
     simcommsys_build_type: Annotated[
-        List[SimcommsysBuildType] | None,
+        List[SimcommsysBuildConfig] | None,
         typer.Option(help="List of Simcommsys types to copy to remote."),
     ] = None,
 ):
@@ -147,16 +147,22 @@ def make_simulators(
             help="List of stream lengths to work with for termination. Only applicable to commsys_stream. Default is [1]."
         ),
     ] = None,
-    simcommsys_tag: Annotated[
+    build_version: Annotated[
         str,
         typer.Option(
-            help="Build tag of Simcommsys binary used to get input alphabetsize."
+            help="Build version (or commit specifier) of Simcommsys binary used to get input alphabetsize."
         ),
     ] = "master",
-    simcommsys_build_type: Annotated[
-        SimcommsysBuildType | None,
+    build_variant: Annotated[
+        str,
         typer.Option(
-            help="Build type of Simcommsys binary used to get input alphabetsize."
+            help="Build variant of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = None,
+    build_config: Annotated[
+        SimcommsysBuildConfig | None,
+        typer.Option(
+            help="Build configuration of Simcommsys binary used to get input alphabetsize."
         ),
     ] = None,
 ):
@@ -164,15 +170,13 @@ def make_simulators(
     Create Simcommsys simulator files from a set of Simcommsys system files in --input-dir.
     """
 
-    simcommsys_build_type = simcommsys_build_type or SimcommsysBuildType.RELEASE
-    if not shutil.which(
-        f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value}"
-    ):
-        print(
-            f"Required binary getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} does not exist for --simcommsys-tag={simcommsys_tag} and --simcommsys-build-type={simcommsys_build_type.value}."
-        )
-        exit(-1)
+    build_config = build_config or SimcommsysBuildConfig.RELEASE
+    assert build_variant
+    getsystemparams_filename = f"getsystemparams.{build_version}.{build_variant}.{build_config.value}"
 
+    if not shutil.which(getsystemparams_filename):
+        print(f"Required binary {getsystemparams_filename} not found in path.")
+        exit(-1)
     if not os.path.isdir(input_dir):
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
@@ -304,7 +308,7 @@ def make_simulators(
             alphabetsize: int
             # read alphabetsize from system file (we use simcommsys for this)
             with os.popen(
-                f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                f"{getsystemparams_filename} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
                 mode="r",
             ) as pipe:
                 data = json.load(pipe)
@@ -378,16 +382,22 @@ def make_timers(
             help="Output directory where Simcommsys timer files will be generated."
         ),
     ],
-    simcommsys_tag: Annotated[
+    build_version: Annotated[
         str,
         typer.Option(
-            help="Build tag of Simcommsys binary used to get input alphabetsize."
+            help="Build version (or commit specifier) of Simcommsys binary used to get input alphabetsize."
         ),
     ] = "master",
-    simcommsys_build_type: Annotated[
-        SimcommsysBuildType | None,
+    build_variant: Annotated[
+        str,
         typer.Option(
-            help="Build type of Simcommsys binary used to get input alphabetsize."
+            help="Build variant of Simcommsys binary used to get input alphabetsize."
+        ),
+    ] = None,
+    build_config: Annotated[
+        SimcommsysBuildConfig | None,
+        typer.Option(
+            help="Build configuration of Simcommsys binary used to get input alphabetsize."
         ),
     ] = None,
 ):
@@ -395,15 +405,13 @@ def make_timers(
     Create Simcommsys timer files from a set of Simcommsys system files in --input-dir.
     """
 
-    simcommsys_build_type = simcommsys_build_type or SimcommsysBuildType.RELEASE
-    if not shutil.which(
-        f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value}"
-    ):
-        print(
-            f"Required binary getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} does not exist for --simcommsys-tag={simcommsys_tag} and --simcommsys-build-type={simcommsys_build_type.value}."
-        )
-        exit(-1)
+    build_config = build_config or SimcommsysBuildConfig.RELEASE
+    assert build_variant
+    getsystemparams_filename = f"getsystemparams.{build_version}.{build_variant}.{build_config.value}"
 
+    if not shutil.which(getsystemparams_filename):
+        print(f"Required binary {getsystemparams_filename} not found in path.")
+        exit(-1)
     if not os.path.isdir(input_dir):
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
@@ -424,7 +432,7 @@ def make_timers(
                 alphabetsize: int
                 # read alphabetsize from system file (we use simcommsys for this)
                 with os.popen(
-                    f"getsystemparams.{simcommsys_tag}.{simcommsys_build_type.value} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                    f"{getsystemparams_filename} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
                     mode="r",
                 ) as pipe:
                     data = json.load(pipe)
@@ -932,22 +940,30 @@ def run_jobs(
             # in the group is invoked with.
             # Must be specified.
             floor_min: <float>
-            # Simcommsys binary tag.
+            # Simcommsys build version.
             # When Simcommsys is compiled, the produced binaries have the format
-            # simcommsys.<tag>.<build-type>, where <tag> depends on the branch and
-            # certain build parameters.
-            # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
-            # that you wish to run each simulation with.
+            # simcommsys.<version>.<variant>.<config>, where <version> is the
+            # build version or commit specifier.
+            # build_version should be set to the value of <version> of the Simcommsys
+            # binary that you wish to run each simulation with.
             # Must be specified.
-            simcommsys_tag: <str>
-            # Simcommsys build type.
+            build_version: <str>
+            # Simcommsys build variant.
             # When Simcommsys is compiled, the produced binaries have the format
-            # simcommsys.<tag>.<build-type>, where <build-type> is either debug, release
-            # or profile.
-            # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
-            # that you wish to run each simulation with.
+            # simcommsys.<version>.<variant>.<config>, where <variant> is the build
+            # variant, depending on system architecture and included libraries.
+            # build_variant should be set to the value of <variant> of the Simcommsys
+            # binary that you wish to run each simulation with.
             # Must be specified.
-            simcommsys_type: <"release" | "debug" | "profile">
+            build_variant: <str>
+            # Simcommsys build configuration.
+            # When Simcommsys is compiled, the produced binaries have the format
+            # simcommsys.<version>.<variant>.<config>, where <config> is the build
+            # configuration (release | debug | profile).
+            # build_config should be set to the value of <config> of the Simcommsys
+            # binary that you wish to run each simulation with.
+            # Must be specified.
+            build_config: <"release" | "debug" | "profile">
             # additional dynamic params that are specific to an executor type.
             [key: value]*
         ]*
@@ -994,8 +1010,9 @@ def run_jobs(
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
             executor.run(
-                jobsspec.simcommsys_tag,
-                cast(Literal["debug", "release"], jobsspec.simcommsys_type),
+                jobsspec.build_version,
+                jobsspec.build_variant,
+                cast(Literal["debug", "release"], jobsspec.build_config),
                 jobs=jobsspec.jobs,
                 dry_run=dry_run,
                 **jobsspec.executor_kwargs,

@@ -13,10 +13,11 @@ jobs:
     confidence: 0.9
     relative_error: 0.1
     floor_min: 0.5e-3
-    # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: v1.2.3-1069-gedc4c129.sierraforest
-    simcommsys_type: release
     memlimit_gb: 4
+    # NOTE: The build variant likely needs to be changed on your machine
+    build_version: v1.2.3-1069-gedc4c129
+    build_variant: sierraforest
+    build_config: release
   group2:
     base_dir: ..
     rgx: "Simulators/errors_hamming-random-qsc.*\\.txt"
@@ -27,6 +28,7 @@ jobs:
     confidence: 0.95
     relative_error: 0.05
     floor_min: 1e-3
-    # NOTE: Tag likely needs to be changed on your machine
-    simcommsys_tag: v1.2.3-1069-gedc4c129.sierraforest
-    simcommsys_type: release
+    # NOTE: The build variant likely needs to be changed on your machine
+    build_version: v1.2.3-1069-gedc4c129
+    build_variant: sierraforest
+    build_config: release

@@ -5,8 +5,10 @@ set -e
 SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 cd "${SCRIPT_DIR}/.."
 
-# NOTE: SIMCOMMSYS_TAG probably has to be changed on your system.
-SIMCOMMSYS_TAG=v1.2.3-1069-gedc4c129.sierraforest
+# NOTE: BUILD_VARIANT probably has to be changed on your system.
+BUILD_VERSION=v1.2.3-1069-gedc4c129
+BUILD_VARIANT=sierraforest
+BUILD_CONFIG=release
 
 echo "TEST CASE 1"
 echo "==========="
@@ -46,9 +48,13 @@ echo "==========="
 echo "Testing generation of simulator and timer files ..."
 poetry run simcommsys-utils make-simulators \
     --resultscollector errors_hamming --input-mode random --analyze-decode-iters \
-    --simcommsys-tag ${SIMCOMMSYS_TAG} \
+    --build-version ${BUILD_VERSION} \
+    --build-variant ${BUILD_VARIANT} \
+    --build-config ${BUILD_CONFIG} \
     TestData/Systems TestData/Simulators
 echo "Generation of Simcommsys simulator files OK."
 poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers \
-    --simcommsys-tag ${SIMCOMMSYS_TAG}
+    --build-version ${BUILD_VERSION} \
+    --build-variant ${BUILD_VARIANT} \
+    --build-config ${BUILD_CONFIG}
 echo "Generation of Simcommsys timer files OK."

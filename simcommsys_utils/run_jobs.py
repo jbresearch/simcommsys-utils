@@ -28,7 +28,7 @@ from simcommsys_utils.executors import (
     SimcommsysExecutorType,
     SimcommsysJob,
     SimcommsysExecutor,
-    SimcommsysBuildType,
+    SimcommsysBuildConfig,
 )
 
 
@@ -127,20 +127,30 @@ class JobBatchSpec(BaseModel):
     # Value of the --floor-min Simcommsys parameter that each simulation in the group is invoked with.
     # Must be specified.
     floor_min: float
-    # Simcommsys binary tag.
-    # When Simcommsys is compiled, the produced binaries have the format simcommsys.<tag>.<build-type>,
-    # where <tag> depends on the branch and certain build parameters.
-    # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
-    # that you wish to run each simulation with.
+    # Simcommsys build version.
+    # When Simcommsys is compiled, the produced binaries have the format
+    # simcommsys.<version>.<variant>.<config>, where <version> is the
+    # build version or commit specifier.
+    # build_version should be set to the value of <version> of the Simcommsys
+    # binary that you wish to run each simulation with.
     # Must be specified.
-    simcommsys_tag: str
-    # Simcommsys build type.
-    # When Simcommsys is compiled, the produced binaries have the format simcommsys.<tag>.<build-type>,
-    # where <build-type> is either debug, release or profile.
-    # simcommsys_tag should be set to the value of <tag> of the Simcommsys binary
-    # that you wish to run each simulation with.
+    build_version: str
+    # Simcommsys build variant.
+    # When Simcommsys is compiled, the produced binaries have the format
+    # simcommsys.<version>.<variant>.<config>, where <variant> is the build
+    # variant, depending on system architecture and included libraries.
+    # build_variant should be set to the value of <variant> of the Simcommsys
+    # binary that you wish to run each simulation with.
     # Must be specified.
-    simcommsys_type: SimcommsysBuildType
+    build_variant: str
+    # Simcommsys build configuration.
+    # When Simcommsys is compiled, the produced binaries have the format
+    # simcommsys.<version>.<variant>.<config>, where <config> is the build
+    # configuration (release | debug | profile).
+    # build_config should be set to the value of <config> of the Simcommsys
+    # binary that you wish to run each simulation with.
+    # Must be specified.
+    build_config: SimcommsysBuildConfig
     executor_kwargs: dict[str, Any] = {}
 
     @property

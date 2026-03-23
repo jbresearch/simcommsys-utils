@@ -26,7 +26,7 @@ import os
 from enum import Enum
 
 
-class SimcommsysBuildType(str, Enum):
+class SimcommsysBuildConfig(str, Enum):
     DEBUG = "debug"
     RELEASE = "release"
     PROFILE = "profile"
@@ -47,8 +47,9 @@ class SimcommsysJob:
 class SimcommsysExecutor(abc.ABC):
     def _get_simcommsys_cmd(
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         job: SimcommsysJob,
     ):
         """
@@ -60,7 +61,7 @@ class SimcommsysExecutor(abc.ABC):
         for prange in job.param_ranges:
             param_ranges += f"--param-range {prange}"
 
-        return f"simcommsys.{simcommsys_tag}.{simcommsys_type.value} \
+        return f"simcommsys.{build_version}.{build_variant}.{build_config.value} \
                     -i {job.inputfile} \
                     -o {job.outputfile} \
                     {param_ranges} \
@@ -73,8 +74,9 @@ class SimcommsysExecutor(abc.ABC):
     @abc.abstractmethod
     def run(
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         **jobparams,
@@ -124,8 +126,9 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
 
     def run(  # type:ignore
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -135,7 +138,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         for job in jobs:
             # build command to submit to shell.
             simcommsys_cmd = self._get_simcommsys_cmd(
-                simcommsys_tag, simcommsys_type, job
+                build_version, build_variant, build_config, job
             )
             cmd = ""
             if memlimit_gb is not None:
@@ -160,15 +163,16 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
     def _get_masterslave_cmd(
         self,
         job: SimcommsysJob,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         port: int,
         workers: int,
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
         simcommsys_cmd = self._get_simcommsys_cmd(
-            simcommsys_tag, simcommsys_type, job)
+            build_version, build_variant, build_config, job)
         # logfile where output from workers will be stored.
         worker_logfile = os.path.join(
             os.path.dirname(job.logfile),
@@ -198,7 +202,7 @@ timeout 30 sh -c 'until netcat -z localhost {port}; do sleep 1; done'
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
     echo "Starting worker $i"
-    simcommsys.{simcommsys_tag}.{simcommsys_type.value} -q -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
+    simcommsys.{build_version}.{build_variant}.{build_config.value} -q -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
 done
 
 handler () {{
@@ -216,8 +220,9 @@ echo "Finished simulation of {job.name} with {workers} workers."
 
     def run(  # type:ignore
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -243,7 +248,8 @@ echo "Finished simulation of {job.name} with {workers} workers."
         for job in jobs:
             # build command to submit to shell.
             cmd = self._get_masterslave_cmd(
-                job, simcommsys_tag, simcommsys_type, port, workers, memlimit_gb
+                job, build_version, build_variant, build_config,
+                port, workers, memlimit_gb
             )
             if dry_run:
                 print(cmd)
@@ -306,8 +312,9 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 
     def run(  # type:ignore
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -326,7 +333,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 job_name=job.name,
                 job_logfile=job.logfile,
                 wrapped_command=self._get_simcommsys_cmd(
-                    simcommsys_tag, simcommsys_type, job
+                    build_version, build_variant, build_config, job
                 )
                 + " -e local",
                 node_index=index,
@@ -360,8 +367,9 @@ class SlurmMasterSlaveSimcommsysExecutor(
 ):
     def run(  # type:ignore
         self,
-        simcommsys_tag: str,
-        simcommsys_type: SimcommsysBuildType,
+        build_version: str,
+        build_variant: str,
+        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
@@ -392,8 +400,8 @@ class SlurmMasterSlaveSimcommsysExecutor(
             self._run_slurm(
                 job.name,
                 job.logfile,
-                self._get_masterslave_cmd(job, simcommsys_tag,
-                                          simcommsys_type, port, workers),
+                self._get_masterslave_cmd(job, build_version, build_variant,
+                                          build_config, port, workers),
                 index,
                 dry_run=dry_run,
                 gres=gres,
