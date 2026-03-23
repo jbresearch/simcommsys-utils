@@ -45,6 +45,36 @@ class SimcommsysJob:
 
 
 class SimcommsysExecutor(abc.ABC):
+    def _get_build_cmd(
+        self,
+        build_version: str,
+        plain_build: bool,
+        build_config: SimcommsysBuildConfig,
+        source_url: str,
+        target_work_dir: str,
+        target_bin_dir: str,
+        workers: int = cpu_count()
+    ):
+        build_target = "plain-" if plain_build else ""
+        build_target += f"install-main-{build_config.value}"
+        cmd = f"""
+set -euo pipefail
+# Make sure work directory exists
+mkdir -p {target_work_dir}
+# Open file descriptor for lock
+exec {{lock_fd}}>"{target_work_dir}/LOCK"
+## CRITICAL SECTION START
+flock -x "$lock_fd"
+# Clone the repo and build the binaries
+cd {target_work_dir}
+git clone {source_url}
+git checkout {build_version}
+BINDIR={target_bin_dir} make -j {workers} {build_target}
+## CRITICAL SECTION END
+flock -u "$lock_fd"
+"""
+        return cmd
+
     def _get_simcommsys_cmd(
         self,
         build_version: str,
