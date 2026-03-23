@@ -78,6 +78,8 @@ git -C {target_work_dir} checkout {build_version}
 echo Building binaries into {target_bin_dir}
 BINDIR={target_bin_dir} make -C {target_work_dir} -j {workers} {build_target}
 echo Done building binaries
+BUILD_VARIANT=$(make -C {target_work_dir} showbuildid 2>/dev/null)
+echo Build variant is $BUILD_VARIANT
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
 """
