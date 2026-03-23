@@ -41,51 +41,6 @@ from simcommsys_utils.executors import SimcommsysBuildConfig
 app = typer.Typer()
 
 
-@app.command()
-def copy_binaries(
-    remote: Annotated[
-        str,
-        typer.Argument(
-            help="Remote host to copy binaries to. Format: <username>@<host>"
-        ),
-    ],
-    simcommsys_tag: Annotated[
-        str, typer.Option(help="Build tag of Simcommsys binaries to copy.")
-    ] = "master",
-    arch: Annotated[
-        str, typer.Option(help="Architecture of target machine.")
-    ] = "x86_64",
-    binary: Annotated[
-        List[str] | None, typer.Option(
-            help="List of binaries to copy to remote.")
-    ] = None,
-    simcommsys_build_type: Annotated[
-        List[SimcommsysBuildConfig] | None,
-        typer.Option(help="List of Simcommsys types to copy to remote."),
-    ] = None,
-):
-    """
-    This is a utility command which can be used to copy Simcommsys binaries to a remote.
-    """
-
-    logging.info(f"Making directory {remote}:~/bin.{arch}...")
-    subprocess.run(f"ssh {remote} 'mkdir -p bin.{arch}'", shell=True)
-
-    # check simcommsys build types are valid
-    simcommsys_build_type = set(simcommsys_build_type or [])
-    for b in binary or []:
-        for t in simcommsys_build_type:
-            if os.path.isfile(f"~/bin.{arch}/{b}.{simcommsys_tag}.{t}"):
-                logging.info(f"Copying {b}.{simcommsys_tag}.{t}...")
-                subprocess.run(
-                    f"scp ~/bin.{arch}/{b}.{simcommsys_tag}.{t} {remote}:~/bin.{arch}",
-                    shell=True,
-                )
-            else:
-                logging.warning(
-                    f"{b}.{simcommsys_tag}.{t} not found, skipping...")
-
-
 class InputMode(Enum):
     """
     Specifies how a Simcommsys simulator should generate input data for the communication system.
