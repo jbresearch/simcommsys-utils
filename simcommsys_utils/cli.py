@@ -1012,7 +1012,8 @@ def run_jobs(
             executor.run(
                 jobsspec.build_version,
                 jobsspec.build_variant,
-                cast(Literal["debug", "release"], jobsspec.build_config),
+                cast(Literal["debug", "release", "profile"],
+                     jobsspec.build_config),
                 jobs=jobsspec.jobs,
                 dry_run=dry_run,
                 **jobsspec.executor_kwargs,
