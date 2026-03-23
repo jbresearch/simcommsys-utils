@@ -66,9 +66,18 @@ exec {{lock_fd}}>"{target_work_dir}/LOCK"
 ## CRITICAL SECTION START
 flock -x "$lock_fd"
 # Clone the repo and build the binaries
-git -C {target_work_dir} clone -n {source_url} .
+if [ -d {target_work_dir}/.git/ ]; then
+    echo Existing working copy found, updating
+    git -C {target_work_dir} fetch origin
+else
+    echo No working copy found, cloning
+    git -C {target_work_dir} clone -n {source_url} .
+fi
+echo Checking out {build_version}
 git -C {target_work_dir} checkout {build_version}
+echo Building binaries into {target_bin_dir}
 BINDIR={target_bin_dir} make -C {target_work_dir} -j {workers} {build_target}
+echo Done building binaries
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
 """
