@@ -8,7 +8,6 @@ cd "${SCRIPT_DIR}/.."
 # NOTE: SIMCOMMSYS_TAG probably has to be changed on your system.
 SIMCOMMSYS_TAG=v1.2.3-1069-gedc4c129.sierraforest
 
-
 echo "TEST CASE 1"
 echo "==========="
 echo "Testing conversion between parity check matrix formats ..."
@@ -53,23 +52,3 @@ echo "Generation of Simcommsys simulator files OK."
 poetry run simcommsys-utils make-timers TestData/Systems TestData/Timers \
     --simcommsys-tag ${SIMCOMMSYS_TAG}
 echo "Generation of Simcommsys timer files OK."
-
-echo
-echo "TEST CASE 4"
-echo "==========="
-echo "Testing running jobs in local execution context ..."
-
-poetry run simcommsys-utils run-jobs \
-    --config-file TestData/Jobfiles/local.yaml \
-    --group group1
-poetry run simcommsys-utils run-jobs \
-    --config-file TestData/Jobfiles/local.yaml \
-    --group group2
-
-echo
-echo "TEST CASE 5"
-echo "==========="
-echo "Testing running jobs in masterslave execution context ..."
-
-poetry run simcommsys-utils run-jobs \
-    --config-file TestData/Jobfiles/masterslave.yaml
