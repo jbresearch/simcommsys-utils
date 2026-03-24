@@ -237,7 +237,7 @@ echo "Starting simulation of {job.name} with {workers} workers."
 SERVER_PID=$!
 
 # Wait for server to open its port
-timeout 30 sh -c 'until netcat -z localhost {port}; do sleep 1; done'
+timeout 30 sh -c "until netcat -z localhost {port}; do sleep 1; done"
 
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
@@ -246,7 +246,7 @@ for i in $(seq 1 {workers}); do
 done
 
 handler () {{
-    echo 'Killing {job.name} server...'
+    echo "Killing {job.name} server..."
     kill $SERVER_PID
 }}
 
