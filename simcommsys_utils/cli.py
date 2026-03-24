@@ -68,7 +68,8 @@ class InputMode(Enum):
 @app.command()
 def make_simulators(
     input_dir: Annotated[
-        str, typer.Argument(
+        str,
+        typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
@@ -78,7 +79,8 @@ def make_simulators(
         ),
     ],
     resultscollector: Annotated[
-        str, typer.Option(help="Results collector for the simulators.")
+        str,
+        typer.Option(help="Results collector for the simulators.")
     ],
     input_mode: Annotated[
         InputMode,
@@ -328,7 +330,8 @@ sequential<int,vector>
 @app.command()
 def make_timers(
     input_dir: Annotated[
-        str, typer.Argument(
+        str,
+        typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
@@ -437,7 +440,8 @@ class ExitChartSimulatorType(Enum):
 @app.command()
 def make_exit_chart_simulators(
     input_dir: Annotated[
-        str, typer.Argument(
+        str,
+        typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
@@ -727,7 +731,8 @@ def convert_pchk(
         typer.Option(help="Format of the input file."),
     ],
     to_format: Annotated[
-        PchkMatrixFormat, typer.Option(help="Required format for the output.")
+        PchkMatrixFormat,
+        typer.Option(help="Required format for the output.")
     ],
     values_method: Annotated[
         ValuesMethod,
