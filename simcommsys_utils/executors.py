@@ -418,7 +418,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
         port: int | str = 3008,
-        workers: int | str = cpu_count(),
+        workers: int | str,
     ):
         try:
             workers = workers if isinstance(workers, int) else int(workers)
