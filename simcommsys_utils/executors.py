@@ -317,7 +317,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         gres: str | None,
         memlimit_gb: int,
         timeout_mins: int,
-        nodelist: list[str] | str | None,
+        nodelist: list[str] | None,
         cpus_per_task: int = 1,
     ):
         """
@@ -362,7 +362,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         gres: str | None = None,
         memlimit_gb: int,
         timeout_mins: int,
-        nodelist: list[str] | str | None = None,
+        nodelist: list[str] | None = None,
     ):
         nodelist = nodelist.split(",") if isinstance(
             nodelist, str) else nodelist
@@ -417,7 +417,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         gres: str | None = None,
         memlimit_gb: int,
         timeout_mins: int,
-        nodelist: list[str] | str | None = None,
+        nodelist: list[str] | None = None,
         port: int | str = 3008,
         workers: int | str,
     ):
