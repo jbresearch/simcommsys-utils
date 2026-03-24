@@ -371,7 +371,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         for job in jobs:
             _run_slurm_args = dict(
                 job_name=job.name,
-                job_logfile=job.logfile,
+                job_logfile=os.path.splitext(job.logfile)[0] + '-slurm.log',
                 wrapped_command=self._get_simcommsys_cmd(
                     build_version, build_variant, build_config, job
                 )
@@ -440,7 +440,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         for job in jobs:
             self._run_slurm(
                 job.name,
-                job.logfile,
+                os.path.splitext(job.logfile)[0] + '-slurm.log',
                 self._get_masterslave_cmd(job, build_version, build_variant,
                                           build_config, port, workers, memlimit_gb),
                 index,
