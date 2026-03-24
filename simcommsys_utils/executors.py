@@ -442,7 +442,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
                 job.name,
                 job.logfile,
                 self._get_masterslave_cmd(job, build_version, build_variant,
-                                          build_config, port, workers),
+                                          build_config, port, workers, memlimit_gb),
                 index,
                 dry_run=dry_run,
                 partition=partition,
