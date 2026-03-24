@@ -448,7 +448,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
                 memlimit_gb=memlimit_gb,
                 timeout_mins=timeout_mins,
                 nodelist=nodelist,
-                cpus_per_task=workers + 1,
+                cpus_per_task=workers,
             )
             if nodelist:
                 index = (index + 1) % len(nodelist)
