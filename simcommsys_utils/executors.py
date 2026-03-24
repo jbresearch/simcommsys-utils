@@ -464,20 +464,19 @@ class SimcommsysExecutorType(str, Enum):
     https://stackoverflow.com/questions/58608361/string-based-enum-in-python
     """
 
-    SLURM = "slurm"
     LOCAL = "local"
     MASTERSLAVE = "masterslave"
-    # master slave within a single SLURM job
+    SLURM = "slurm"
     SLURM_MASTERSLAVE = "slurm_masterslave"
 
     @property
     def executor_type(self) -> type[SimcommsysExecutor]:
         match self:
-            case self.SLURM:
-                return SlurmSimcommsysExecutor
             case self.LOCAL:
                 return LocalSimcommsysExecutor
             case self.MASTERSLAVE:
                 return MasterSlaveSimcommsysExecutor
+            case self.SLURM:
+                return SlurmSimcommsysExecutor
             case self.SLURM_MASTERSLAVE:
                 return SlurmMasterSlaveSimcommsysExecutor
