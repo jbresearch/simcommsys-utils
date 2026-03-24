@@ -22,7 +22,6 @@ jobs:
     memlimit_gb: 4
     timeout_mins: 60
     workers: 4
-    nodelist: "dori,nori"
     # NOTE: The build variant likely needs to be changed on your machine
     build_version: v1.2.3-1069-gedc4c129
     #build_variant: sierraforest
