@@ -8,6 +8,7 @@ cd "${SCRIPT_DIR}/.."
 # NOTE: BUILD_VARIANT probably has to be changed on your system.
 BUILD_VERSION=v1.2.3-1069-gedc4c129
 BUILD_VARIANT=sierraforest
+#BUILD_VARIANT=icelake-server
 BUILD_CONFIG=release
 
 echo "TEST CASE 1"
