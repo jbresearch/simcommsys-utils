@@ -314,7 +314,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        gres: list[str] | None,
+        gres: str | None,
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None,
@@ -339,7 +339,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                         --mail-type=all"
 
         if gres:
-            sbatch_opts += f" --gres={','.join(gres)}"
+            sbatch_opts += f" --gres={gres}"
         if nodename:
             sbatch_opts += f" --nodelist={nodename}"
         cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
@@ -359,7 +359,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         dry_run: bool = False,
         *,
         partition: str,
-        gres: list[str] | None = None,
+        gres: str | None,
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
@@ -413,7 +413,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         jobs: list[SimcommsysJob],
         dry_run: bool = False,
         *,
-        gres: list[str],
+        gres: str | None,
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | str | None = None,
