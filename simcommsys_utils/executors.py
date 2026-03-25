@@ -239,21 +239,23 @@ while true; do
     # Launch the server in the background
     {simcommsys_cmd} -e :$port 1>"{job.logfile}" 2>&1 &
     SERVER_PID=$!
-
     # Wait a moment for the server to attempt to bind to the port
     sleep 1
-
+    # Check if the server is running and started correctly
     if ps -p $SERVER_PID > /dev/null && timeout 30 sh -c "until netcat -z localhost $port; do sleep 1; done"; then
         echo "Server started successfully on port $port"
         break
     fi
     echo "Failed to start server on port $port"
+    # Stop here if we were instructed not to update the port
     if ! {str(update_port_if_in_use).lower()}; then
         exit 1
     fi
     # Ensure the failed server process is killed before retrying
+    echo "Killing failed server process..."
     kill $SERVER_PID 2>/dev/null || true
     wait $SERVER_PID 2>/dev/null
+    echo "Trying next port..."
     port=$((port+1))
 done
 
