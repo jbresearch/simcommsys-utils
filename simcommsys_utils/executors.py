@@ -254,7 +254,7 @@ while true; do
     # Ensure the failed server process is killed before retrying
     echo "Killing failed server process..."
     kill $SERVER_PID 2>/dev/null || true
-    wait $SERVER_PID 2>/dev/null
+    wait $SERVER_PID 2>/dev/null || true
     echo "Trying next port..."
     port=$((port+1))
 done
