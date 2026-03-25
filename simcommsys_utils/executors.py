@@ -222,14 +222,6 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         ulimit_cmd = ""
         if memlimit_gb is not None:
             ulimit_cmd = f"ulimit -v {memlimit_gb * 1024 * 1024}"
-        update_port_cmd = ""
-        if update_port_if_in_use:
-            update_port_cmd = f"""
-while netcat -z localhost $port; do
-    echo "Port $port is in use, trying next port."
-    port=$((port+1))
-done
-"""
         # the command:
         # 1. sets a memory limit using ulimit -v.
         # 2. starts the simcommsys master in a screen session
@@ -242,15 +234,28 @@ echo "Starting simulation of {job.name} with {workers} workers."
 {ulimit_cmd}
 
 port={port}
-{update_port_cmd}
-echo "Using port $port"
+while true; do
+    echo "Attempting to use port $port"
+    # Launch the server in the background
+    {simcommsys_cmd} -e :$port 1>"{job.logfile}" 2>&1 &
+    SERVER_PID=$!
 
-# Launch the server in the background
-{simcommsys_cmd} -e :$port 1>"{job.logfile}" 2>&1 &
-SERVER_PID=$!
+    # Wait a moment for the server to attempt to bind to the port
+    sleep 1
 
-# Wait for server to open its port
-timeout 30 sh -c "until netcat -z localhost $port; do sleep 1; done"
+    if ps -p $SERVER_PID > /dev/null && timeout 30 sh -c "until netcat -z localhost $port; do sleep 1; done"; then
+        echo "Server started successfully on port $port"
+        break
+    fi
+    echo "Failed to start server on port $port"
+    if ! {str(update_port_if_in_use).lower()}; then
+        exit 1
+    fi
+    # Ensure the failed server process is killed before retrying
+    kill $SERVER_PID 2>/dev/null || true
+    wait $SERVER_PID 2>/dev/null
+    port=$((port+1))
+done
 
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
