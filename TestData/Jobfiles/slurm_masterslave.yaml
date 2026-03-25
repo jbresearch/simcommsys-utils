@@ -22,6 +22,7 @@ jobs:
     memlimit_gb: 4
     timeout_mins: 60
     port: 3008
+    update_port_if_in_use: True
     workers: 4
     # NOTE: The build variant likely needs to be changed on your machine
     build_version: v1.2.3-1069-gedc4c129
@@ -49,6 +50,7 @@ jobs:
       - "dori"
       - "nori"
     port: 3008
+    update_port_if_in_use: True
     workers: 4
     # NOTE: The build variant likely needs to be changed on your machine
     build_version: v1.2.3-1069-gedc4c129

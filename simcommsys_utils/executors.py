@@ -207,6 +207,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         build_variant: str,
         build_config: SimcommsysBuildConfig,
         port: int,
+        update_port_if_in_use: bool,
         workers: int,
         memlimit_gb: int | None,
     ) -> str:
@@ -221,6 +222,14 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         ulimit_cmd = ""
         if memlimit_gb is not None:
             ulimit_cmd = f"ulimit -v {memlimit_gb * 1024 * 1024}"
+        update_port_cmd = ""
+        if update_port_if_in_use:
+            update_port_cmd = f"""
+while netcat -z localhost $port; do
+    echo "Port $port is in use, trying next port."
+    port=$((port+1))
+done
+"""
         # the command:
         # 1. sets a memory limit using ulimit -v.
         # 2. starts the simcommsys master in a screen session
@@ -232,17 +241,21 @@ echo "Starting simulation of {job.name} with {workers} workers."
 
 {ulimit_cmd}
 
+port={port}
+{update_port_cmd}
+echo "Using port $port"
+
 # Launch the server in the background
-{simcommsys_cmd} -e :{port} 1>"{job.logfile}" 2>&1 &
+{simcommsys_cmd} -e :$port 1>"{job.logfile}" 2>&1 &
 SERVER_PID=$!
 
 # Wait for server to open its port
-timeout 30 sh -c "until netcat -z localhost {port}; do sleep 1; done"
+timeout 30 sh -c "until netcat -z localhost $port; do sleep 1; done"
 
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
     echo "Starting worker $i"
-    simcommsys.{build_version}.{build_variant}.{build_config.value} -q -e localhost:{port} 1>"{worker_logfile}" 2>&1 &
+    simcommsys.{build_version}.{build_variant}.{build_config.value} -q -e localhost:$port 1>"{worker_logfile}" 2>&1 &
 done
 
 handler () {{
@@ -268,6 +281,7 @@ echo "Finished simulation of {job.name} with {workers} workers."
         *,
         memlimit_gb: int | None = None,
         port: int | str,
+        update_port_if_in_use: bool = False,
         workers: int | str = cpu_count(),
     ):
         try:
@@ -289,7 +303,7 @@ echo "Finished simulation of {job.name} with {workers} workers."
             # build command to submit to shell.
             cmd = self._get_masterslave_cmd(
                 job, build_version, build_variant, build_config,
-                port, workers, memlimit_gb
+                port, update_port_if_in_use, workers, memlimit_gb
             )
             if dry_run:
                 print(cmd)
@@ -419,6 +433,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         timeout_mins: int,
         nodelist: list[str] | None = None,
         port: int | str,
+        update_port_if_in_use: bool = False,
         workers: int | str,
     ):
         try:
@@ -442,7 +457,9 @@ class SlurmMasterSlaveSimcommsysExecutor(
                 job.name,
                 os.path.splitext(job.logfile)[0] + '-slurm.log',
                 self._get_masterslave_cmd(job, build_version, build_variant,
-                                          build_config, port, workers, memlimit_gb),
+                                          build_config,
+                                          port, update_port_if_in_use,
+                                          workers, memlimit_gb),
                 index,
                 dry_run=dry_run,
                 partition=partition,
