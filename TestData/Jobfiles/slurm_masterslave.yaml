@@ -21,6 +21,7 @@ jobs:
     partition: "research_gpu"
     memlimit_gb: 4
     timeout_mins: 60
+    port: 3008
     workers: 4
     # NOTE: The build variant likely needs to be changed on your machine
     build_version: v1.2.3-1069-gedc4c129
@@ -44,10 +45,11 @@ jobs:
     gres: "gpu:ampere:1"
     memlimit_gb: 4
     timeout_mins: 60
-    workers: 4
     nodelist:
       - "dori"
       - "nori"
+    port: 3008
+    workers: 4
     # NOTE: The build variant likely needs to be changed on your machine
     build_version: v1.2.3-1069-gedc4c129
     #build_variant: sierraforest

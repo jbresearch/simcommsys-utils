@@ -267,7 +267,7 @@ echo "Finished simulation of {job.name} with {workers} workers."
         dry_run: bool = False,
         *,
         memlimit_gb: int | None = None,
-        port: int | str = 3008,
+        port: int | str,
         workers: int | str = cpu_count(),
     ):
         try:
@@ -418,7 +418,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         memlimit_gb: int,
         timeout_mins: int,
         nodelist: list[str] | None = None,
-        port: int | str = 3008,
+        port: int | str,
         workers: int | str,
     ):
         try:
