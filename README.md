@@ -1,28 +1,36 @@
 # Simcommsys Utilities
 
-This is a Python package that aids in building and running Simcommsys systems, timers and simulations.
-
-We recommend that you use this package if you wish to run simulations using Simcommsys rather than directly interacting with the binaries.
+This is a Python package that aids in building Simcommsys systems, timers and
+simulation files, and running the corresponding simulations either locally or on
+a cluster. We recommend that you use this package to run simulations using
+Simcommsys rather than directly interacting with the binaries.
 
 ## Prerequisites
 
-This package requires Python (3.10 or later) and the [Poetry](https://python-poetry.org) build system in order to run.
-
-The latter can be installed on Ubuntu (22.04 or later) using the following command:
+This package requires Python and the [Poetry](https://python-poetry.org) build
+system in order to run. Supported versions are:
+* Python 3.10 or later
+* Poetry 1.8.2 or later
+These can be installed on Ubuntu (22.04 or later) from the standard repos using:
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+apt-get install python3 python3-poetry
 ```
+
+As for the main Simcommsys software, the main target platform is the latest LTS
+version of Ubuntu.
 
 ## Installation
 
-Before running this tool for the first time, or after pulling from the Git remote, you should install/refresh the tool:
+Before running this tool for the first time, or after pulling from the Git
+remote, you should install/refresh the tool:
 
 ```bash
 poetry install
 ```
 
-This will create a virtual environment at `./.venv` (if one does not already exist), and install any project dependencies inside it.
+This will create a virtual environment at `./.venv` (if one does not already
+exist), and install any project dependencies inside it.
 
 ## Usage
 
@@ -46,4 +54,5 @@ poetry run simcommsys-utils <subcommand> --help
 
 ## Examples
 
-The `Scripts/` directory contains some test cases for the tool which also serve as examples of how it could be used.
+The `Scripts/` directory contains some test cases for the tool which also serve
+as examples of how it could be used.
