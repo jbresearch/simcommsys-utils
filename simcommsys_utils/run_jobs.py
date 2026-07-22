@@ -152,12 +152,9 @@ class JobBatchSpec(BaseModel):
         # get input files using either regex or glob
         if self.rgx is not None:
             r = re.compile(self.rgx)
-            for root, _, files in os.walk(self.base_dir):
-                for name in files:
-                    current_path = Path(root, name)
-                    # make sure that filename we try to match is relative path to base_dir
-                    if r.match(str(current_path.relative_to(self.base_dir))):
-                        input_files.append(current_path)
+            for path in self.base_dir.rglob("*"):
+                if path.is_file() and r.match(str(path.relative_to(self.base_dir))):
+                    input_files.append(path)
 
         else:
             input_files += [
