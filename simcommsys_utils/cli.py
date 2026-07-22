@@ -69,12 +69,12 @@ class InputMode(Enum):
 @app.command()
 def make_simulators(
     input_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Output directory where Simcommsys simulator files will be generated."
         ),
@@ -135,27 +135,25 @@ def make_simulators(
     if not shutil.which(getsystemparams_filename):
         print(f"Required binary {getsystemparams_filename} not found in path.")
         exit(-1)
-    if not os.path.isdir(input_dir):
+    if not input_dir.is_dir():
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
-    if not os.path.isdir(output_dir):
+    if not output_dir.is_dir():
         print(f"Output directory given {output_dir} does not exist.")
         exit(-1)
 
     input_mode_code = input_mode.code
 
-    for sysfile in os.listdir(input_dir):
-        commsys: str
-        with open(os.path.join(input_dir, sysfile), "r") as fl:
-            commsys = fl.read()
+    for syspath in input_dir.iterdir():
+        if not syspath.is_file():
+            continue
+
+        commsys = syspath.read_text()
 
         if match := re.match(r"commsys_stream[^<]*<(.*),vector,(.*)>", commsys):
 
             # Simulators without parameters: open-ended streams
-            with open(
-                os.path.join(
-                    output_dir, f"{resultscollector}-{input_mode.value}-{sysfile}"
-                ),
+            with (output_dir / f"{resultscollector}-{input_mode.value}-{syspath.name}").open(
                 "w",
             ) as fl:
 
@@ -188,11 +186,7 @@ def make_simulators(
 
             # Simulators with parameters: streams with reset
             for reset_frames in [int(x) for x in stream_reset_n or [1]]:
-                with open(
-                    os.path.join(
-                        output_dir,
-                        f"{resultscollector}-{input_mode.value}-stream-reset-{reset_frames}-{sysfile}",
-                    ),
+                with (output_dir / f"{resultscollector}-{input_mode.value}-stream-reset-{reset_frames}-{syspath.name}").open(
                     "w",
                 ) as fl:
                     fl.write(
@@ -226,11 +220,7 @@ def make_simulators(
 
             # Simulators with parameters: streams with termination
             for term_frames in [int(x) for x in stream_term_n or [1]]:
-                with open(
-                    os.path.join(
-                        output_dir,
-                        f"{resultscollector}-{input_mode.value}-stream-term-{term_frames}-{sysfile}",
-                    ),
+                with (output_dir / f"{resultscollector}-{input_mode.value}-stream-term-{term_frames}-{syspath.name}").open(
                     "w",
                 ) as fl:
                     fl.write(
@@ -266,16 +256,13 @@ def make_simulators(
             alphabetsize: int
             # read alphabetsize from system file (we use simcommsys for this)
             with os.popen(
-                f"{getsystemparams_filename} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                f"{getsystemparams_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
                 mode="r",
             ) as pipe:
                 data = json.load(pipe)
                 alphabetsize = data["input-alphabetsize"]
 
-            with open(
-                os.path.join(
-                    output_dir, f"{resultscollector}-{input_mode.value}-{sysfile}"
-                ),
+            with (output_dir / f"{resultscollector}-{input_mode.value}-{syspath.name}").open(
                 "w",
             ) as fl:
                 source: str
@@ -324,19 +311,19 @@ sequential<int,vector>
                 )
         else:
             logging.warning(
-                f"Skipping {sysfile} as it does not appear to be a valid system file."
+                f"Skipping {syspath.name} as it does not appear to be a valid system file."
             )
 
 
 @app.command()
 def make_timers(
     input_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Output directory where Simcommsys timer files will be generated."
         ),
@@ -371,27 +358,24 @@ def make_timers(
     if not shutil.which(getsystemparams_filename):
         print(f"Required binary {getsystemparams_filename} not found in path.")
         exit(-1)
-    if not os.path.isdir(input_dir):
+    if not input_dir.is_dir():
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
-    if not os.path.isdir(output_dir):
+    if not output_dir.is_dir():
         print(f"Output directory given {output_dir} does not exist.")
         exit(-1)
 
-    for sysfile in os.listdir(input_dir):
-        commsys: str
-        with open(os.path.join(input_dir, sysfile), "r") as fl:
-            commsys = fl.read()
+    for syspath in input_dir.iterdir():
+        if not syspath.is_file():
+            continue
+        commsys = syspath.read_text()
 
         if match := re.match(r"commsys[^<]*<(.*),(.*)>", commsys):
-            with open(
-                os.path.join(output_dir, sysfile),
-                "w",
-            ) as fl:
+            with (output_dir / syspath.name).open("w") as fl:
                 alphabetsize: int
                 # read alphabetsize from system file (we use simcommsys for this)
                 with os.popen(
-                    f"{getsystemparams_filename} --param input-alphabetsize --system-file {os.path.join(input_dir, sysfile)} --type {match.group(1)} --container {match.group(2)}",
+                    f"{getsystemparams_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
                     mode="r",
                 ) as pipe:
                     data = json.load(pipe)
@@ -412,7 +396,7 @@ uniform<int,vector>
                 )
         else:
             logging.warning(
-                f"Skipping {sysfile} as it does not appear to be a valid system file."
+                f"Skipping {syspath.name} as it does not appear to be a valid system file."
             )
 
 
@@ -441,12 +425,12 @@ class ExitChartSimulatorType(Enum):
 @app.command()
 def make_exit_chart_simulators(
     input_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Input directory containing Simcommsys system files.")
     ],
     output_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Output directory where Simcommsys exit chart simulator files will be generated."
         ),
@@ -465,26 +449,25 @@ def make_exit_chart_simulators(
     Create Simcommsys exit chart simulator files from a set of Simcommsys system files in --input-dir.
     """
 
-    if not os.path.isdir(input_dir):
+    if not input_dir.is_dir():
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
-    if not os.path.isdir(output_dir):
+    if not output_dir.is_dir():
         print(f"Output directory given {output_dir} does not exist.")
         exit(-1)
 
     exit_chart_type_code = exit_chart_type.code
 
-    for sysfile in os.listdir(input_dir):
-        commsys: str
-        with open(os.path.join(input_dir, sysfile), "r") as fl:
-            commsys = fl.read()
+    for syspath in input_dir.iterdir():
+        if not syspath.is_file():
+            continue
+        commsys = syspath.read_text()
 
         if match := re.match(r"commsys[^<]*<([^,>]*)", commsys):
-            with open(
-                os.path.join(
-                    output_dir,
-                    f"exit_computer-{exit_chart_type_code}-{system_param}-{sysfile}",
-                ),
+            with (
+                output_dir
+                / f"exit_computer-{exit_chart_type_code}-{system_param}-{syspath.name}"
+            ).open(
                 "w",
             ) as fl:
                 # use exit chart computer simulator
@@ -504,7 +487,7 @@ def make_exit_chart_simulators(
                 )
         else:
             logging.warning(
-                f"Skipping {sysfile} as it does not appear to be a valid system file."
+                f"Skipping {syspath.name} as it does not appear to be a valid system file."
             )
 
 
