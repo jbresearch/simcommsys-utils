@@ -17,6 +17,7 @@
 
 import logging
 import os
+from pathlib import Path
 import subprocess
 from typing import Annotated, Literal, cast, List
 import re
@@ -819,7 +820,7 @@ def convert_pchk(
 @app.command()
 def run_jobs(
     config_file: Annotated[
-        str,
+        Path,
         typer.Option(
             help="Path to configuration file with details of Simcommsys jobs to run."
         ),
@@ -937,18 +938,16 @@ def run_jobs(
     in the first two groups only by specifying --group cpu-eccperf --group gpu-eccperf.
     """
 
-    if not os.path.isfile(config_file):
+    if not config_file.is_file():
         print(f"Specified configuration file {config_file} does not exist.")
         exit(-1)
 
     config: RunJobsSpec
     try:
-        with open(config_file, "r") as fl:
+        with config_file.open("r") as fl:
             d = load(fl, Loader=Loader)
             config = RunJobsSpec.model_validate(
-                d | {"config_dir": os.path.realpath(
-                    os.path.dirname(config_file))}
-            )
+                d | {"config_dir": str(config_file.parent.resolve())})
 
     except ValidationError as e:
         print(e)
