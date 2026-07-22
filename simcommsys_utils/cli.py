@@ -915,7 +915,7 @@ def run_jobs(
         with config_file.open("r") as fl:
             d = load(fl, Loader=Loader)
             config = RunJobsSpec.model_validate(
-                d | {"config_dir": str(config_file.parent.resolve())})
+                d | {"config_dir": config_file.parent.resolve()})
 
     except ValidationError as e:
         print(e)

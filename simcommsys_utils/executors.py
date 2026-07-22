@@ -16,6 +16,7 @@
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
 import abc
+from pathlib import Path
 import subprocess
 from subprocess import CalledProcessError
 from dataclasses import dataclass
@@ -35,9 +36,9 @@ class SimcommsysBuildConfig(str, Enum):
 @dataclass
 class SimcommsysJob:
     name: str
-    inputfile: str
-    outputfile: str
-    logfile: str
+    inputfile: Path
+    outputfile: Path
+    logfile: Path
     param_ranges: list[str]
     confidence: float
     relative_error: float
@@ -192,7 +193,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         elif self.workers == 1 or len(job_commands) == 1:
             # There is no point in using multiprocessing as there is only one command or one worker.
             for cmd, job in job_commands:
-                _run_local_cmd(cmd, job.logfile)
+                _run_local_cmd(cmd, job)
         else:
             with multiprocessing.Pool(processes=self.workers) as p:
                 p.map(_run_local_cmd_wrapper, job_commands)
@@ -215,10 +216,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         simcommsys_cmd = self._get_simcommsys_cmd(
             build_version, build_variant, build_config, job)
         # logfile where output from workers will be stored.
-        worker_logfile = os.path.join(
-            os.path.dirname(job.logfile),
-            f"{os.path.splitext(os.path.basename(job.logfile))[0]}-w$i.log"
-        )
+        worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
         ulimit_cmd = ""
         if memlimit_gb is not None:
             ulimit_cmd = f"ulimit -v {memlimit_gb * 1024 * 1024}"
@@ -329,7 +327,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
     def _run_slurm(
         self,
         job_name: str,
-        job_logfile: str,
+        job_logfile: Path,
         wrapped_command: str,
         node_index: int,
         dry_run: bool = False,
@@ -392,7 +390,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         for job in jobs:
             _run_slurm_args = dict(
                 job_name=job.name,
-                job_logfile=os.path.splitext(job.logfile)[0] + '-slurm.log',
+                job_logfile=job.logfile.with_name(
+                    job.logfile.stem + '-slurm.log'),
                 wrapped_command=self._get_simcommsys_cmd(
                     build_version, build_variant, build_config, job
                 )
@@ -462,7 +461,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
         for job in jobs:
             self._run_slurm(
                 job.name,
-                os.path.splitext(job.logfile)[0] + '-slurm.log',
+                job.logfile.with_name(job.logfile.stem + '-slurm.log'),
                 self._get_masterslave_cmd(job, build_version, build_variant,
                                           build_config,
                                           port, update_port_if_in_use,

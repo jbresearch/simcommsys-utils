@@ -16,6 +16,7 @@
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Any, Annotated, Optional
+from pathlib import Path
 from typing_extensions import Self
 import re
 import os
@@ -47,18 +48,6 @@ def _is_valid_rgx(rgx: str | None):
     return rgx
 
 
-def _is_dir(dir: str):
-    """
-    Check that given directory exists.
-
-    Converts it to absolute dir if it does.
-    """
-    if not os.path.isdir(dir):
-        raise ValueError(
-            f"Config directory {dir} does not exist or is not a directory")
-    return os.path.realpath(dir)
-
-
 class JobBatchSpec(BaseModel):
     """
     Specification for a batch of jobs
@@ -73,12 +62,12 @@ class JobBatchSpec(BaseModel):
     groupname: str
 
     # Absolute path of the config file from which this job batch was parsed
-    config_dir: Annotated[str, AfterValidator(_is_dir)]
+    config_dir: Path
     # "Base" directory of the input files to Simcommsys.
     # glob or rgx will match files relative to this directory.
     # If base_dir is not an absolute directory, then it will be considered relative to config_dir.
     # This parameter is optional and if not specified, it defaults to config_dir.
-    base_dir: str | None = None
+    base_dir: Path | None = None
     #  Python regex string which is used to find simulator files underneath base_dir.
     # One of glob or rgx must be specified.
     # If both are specified, rgx takes precedent and glob is ignored.
@@ -90,11 +79,11 @@ class JobBatchSpec(BaseModel):
     # Output directory for Simcommsys results.
     # If not absolute, the output directory is considered relative to config_dir.
     # Must be specified.
-    output_dir: str
+    output_dir: Path
     # Output directory for Simcommsys logs.
     # If not absolute, the output directory is considered relative to config_dir.
     # Must be specified.
-    log_dir: str
+    log_dir: Path
     # List of parameter combinations.
     # If specified, then for every simulator file matched by rgx or glob,
     # an individual Simcommsys run is invoked with every parameter combination in params.
@@ -158,26 +147,21 @@ class JobBatchSpec(BaseModel):
         """
         Return all simcommsys jobs specified by this batch spec.
         """
-        input_files: list[str] = []
-        # base directory relative to which we search for input files
-        base_dir: str = self.base_dir or self.config_dir
+        input_files: list[Path] = []
 
         # get input files using either regex or glob
         if self.rgx is not None:
             r = re.compile(self.rgx)
-            for root, _, files in os.walk(base_dir):
+            for root, _, files in os.walk(self.base_dir):
                 for name in files:
+                    current_path = Path(root, name)
                     # make sure that filename we try to match is relative path to base_dir
-                    if r.match(
-                        os.path.relpath(os.path.join(
-                            root, name), start=base_dir)
-                    ):
-                        input_files.append(os.path.join(root, name))
+                    if r.match(str(current_path.relative_to(self.base_dir))):
+                        input_files.append(current_path)
 
         else:
             input_files += [
-                os.path.join(base_dir, name)
-                for name in glob(self.glob, root_dir=base_dir)
+                *self.base_dir.glob(self.glob)
             ]
 
         if len(input_files) == 0:
@@ -189,18 +173,10 @@ class JobBatchSpec(BaseModel):
             # get list of jobs using param_ranges
             return [
                 SimcommsysJob(
-                    name=os.path.basename(jobfile.removesuffix(".txt")),
+                    name=jobfile.stem,
                     inputfile=jobfile,
-                    outputfile=os.path.join(
-                        self.output_dir,
-                        os.path.basename(jobfile).removesuffix(
-                            ".txt") + ".json",
-                    ),
-                    logfile=os.path.join(
-                        self.log_dir,
-                        os.path.basename(jobfile).removesuffix(
-                            ".txt") + ".log",
-                    ),
+                    outputfile=self.output_dir / (jobfile.stem + ".json"),
+                    logfile=self.log_dir / (jobfile.stem + ".log"),
                     param_ranges=self.param_ranges,
                     confidence=self.confidence,
                     relative_error=self.relative_error,
@@ -210,34 +186,22 @@ class JobBatchSpec(BaseModel):
             ]
         else:
             # get list of jobs using params
-            return [
-                SimcommsysJob(
-                    name=os.path.basename(jobfile.removesuffix(".txt"))
-                    + "-"
-                    + "_".join(map(lambda p: f"{p:g}", pset)),
-                    inputfile=jobfile,
-                    outputfile=os.path.join(
-                        self.output_dir,
-                        os.path.basename(jobfile).removesuffix(".txt")
-                        + "-"
-                        + "_".join(map(lambda p: f"{p:g}", pset))
-                        + ".json",
-                    ),
-                    logfile=os.path.join(
-                        self.log_dir,
-                        os.path.basename(jobfile).removesuffix(".txt")
-                        + "-"
-                        + "_".join(map(lambda p: f"{p:g}", pset))
-                        + ".log",
-                    ),
-                    param_ranges=[f"arithmetic:{p}:1:{p+1}" for p in pset],
-                    confidence=self.confidence,
-                    relative_error=self.relative_error,
-                    floor_min=self.floor_min,
-                )
-                for jobfile in input_files
-                for pset in self.params
-            ]
+            jobs = []
+            for jobfile in input_files:
+                for pset in self.params:
+                    pset_str = "_".join(f"{p:g}" for p in pset)
+                    name = f"{jobfile.stem}-{pset_str}"
+                    jobs.append(SimcommsysJob(
+                        name=name,
+                        inputfile=jobfile,
+                        outputfile=self.output_dir / f"{name}.json",
+                        logfile=self.log_dir / f"{name}.log",
+                        param_ranges=[f"arithmetic:{p}:1:{p+1}" for p in pset],
+                        confidence=self.confidence,
+                        relative_error=self.relative_error,
+                        floor_min=self.floor_min,
+                    ))
+            return jobs
 
     @classmethod
     def model_validate(
@@ -283,32 +247,36 @@ class JobBatchSpec(BaseModel):
         'base_dir'.
         """
 
+        self.config_dir = self.config_dir.resolve()
+
         if self.base_dir is not None:
             # make base_dir absolute if it is not
-            if not os.path.isabs(self.base_dir):
-                self.base_dir = os.path.join(self.config_dir, self.base_dir)
+            if not self.base_dir.is_absolute():
+                self.base_dir = self.config_dir / self.base_dir
             # check that base_dir exists
-            if not os.path.isdir(self.base_dir):
+            if not self.base_dir.is_dir():
                 raise ValueError(
                     f"Base directory {self.base_dir} does not exist or is not a directory"
                 )
         else:
             self.base_dir = self.config_dir
 
+        self.base_dir = self.base_dir.resolve()
+
         # make output_dir absolute if it is not
-        if not os.path.isabs(self.output_dir):
-            self.output_dir = os.path.join(self.base_dir, self.output_dir)
+        if not self.output_dir.is_absolute():
+            self.output_dir = self.base_dir / self.output_dir
         # check that output_dir exists
-        if not os.path.isdir(self.output_dir):
+        if not self.output_dir.is_dir():
             raise ValueError(
                 f"Output directory {self.output_dir} does not exist or is not a directory"
             )
 
         # make log_dir absolute if it is not
-        if not os.path.isabs(self.log_dir):
-            self.log_dir = os.path.join(self.base_dir, self.log_dir)
+        if not self.log_dir.is_absolute():
+            self.log_dir = self.base_dir / self.log_dir
         # check that log_dir exists
-        if not os.path.isdir(self.log_dir):
+        if not self.log_dir.is_dir():
             raise ValueError(
                 f"Output directory {self.log_dir} does not exist or is not a directory"
             )
@@ -364,7 +332,7 @@ class RunJobsSpec(BaseModel):
         obj["executor_kwargs"] = obj.pop("executor")
         # pass config_dir and groupname to every dict in objs[jobs]
         for groupname, group in obj["jobs"].items():
-            obj["jobs"][groupname]["config_dir"] = obj["config_dir"]
+            obj["jobs"][groupname]["config_dir"] = Path(obj["config_dir"])
             obj["jobs"][groupname]["groupname"] = groupname
             obj["jobs"][groupname] = JobBatchSpec.model_validate(
                 group, strict=strict, from_attributes=from_attributes, context=context
