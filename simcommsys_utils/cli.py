@@ -512,19 +512,19 @@ class SPAType(Enum):
 @app.command()
 def make_ldpc_systems(
     codes_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Path to directory of Simcommsys TXT files with LDPC codes."
         ),
     ],
     templates_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Path to directory with system template which the generated system files will be based on."
         ),
     ],
     output_dir: Annotated[
-        str,
+        Path,
         typer.Argument(
             help="Path to directory where generated system files will be placed."
         ),
@@ -565,42 +565,40 @@ def make_ldpc_systems(
     template.
     """
 
-    if not os.path.isdir(templates_dir):
+    if not templates_dir.is_dir():
         print(f"Templates directory given {templates_dir} does not exist.")
         exit(-1)
-    if not os.path.isdir(codes_dir):
+    if not codes_dir.is_dir():
         print(f"Codes directory given {codes_dir} does not exist.")
         exit(-1)
 
-    if not os.path.isdir(output_dir):
+    if not output_dir.is_dir():
         print(f"Output directory given {output_dir} does not exist.")
         exit(-1)
 
-    for template_file in os.listdir(templates_dir):
-        if not template_file.endswith(".txt"):
+    for template_path in templates_dir.iterdir():
+        if not template_path.is_file() or template_path.suffix != ".txt":
             logging.warning(
-                f"{template_file} does not appear to be a template file (as it does not have a .txt suffix), skipping..."
+                f"{template_path.name} does not appear to be a template file (as it does not have a .txt suffix), skipping..."
             )
             continue
 
-        commsys_template: str
-        with open(os.path.join(templates_dir, template_file), "r") as fl:
-            commsys_template = fl.read()
+        commsys_template = template_path.read_text()
 
-        for code_file in os.listdir(codes_dir):
+        for code_path in codes_dir.iterdir():
+            if not code_path.is_file():
+                continue
             # check if code_file is a valid parity check matrix file by parsing it.
             try:
-                with open(os.path.join(codes_dir, code_file), "r") as fl:
+                with code_path.open("r") as fl:
                     PchkMatrix.read(fl, PchkMatrixFormat.SIMCOMMSYS)
             except Exception as e:
                 logging.warning(
-                    f"{code_file} does not appear to be a parity check matrix file (in Simcommsys format), skipping..."
+                    f"{code_path.name} does not appear to be a parity check matrix file (in Simcommsys format), skipping..."
                 )
                 continue
 
-            code: str
-            with open(os.path.join(codes_dir, code_file), "r") as fl:
-                code = fl.read()
+            code = code_path.read_text()
 
             for r in real_type:
                 for s in spa_type:
@@ -626,23 +624,10 @@ clip
 """
                         )
 
-                        with open(
-                            os.path.join(
-                                output_dir,
-                                os.path.basename(
-                                    template_file).removesuffix(".txt")
-                                + "."
-                                + g
-                                + "."
-                                + code_file.removesuffix(".txt")
-                                + "."
-                                + r.value
-                                + "."
-                                + s.value
-                                + ".txt",
-                            ),
-                            "w",
-                        ) as fl:
+                        output_filename = f"{template_path.stem}.{g}.{code_path.stem}.{r.value}.{s.value}.txt"
+                        output_path = output_dir / output_filename
+
+                        with output_path.open("w") as fl:
                             fl.write(commsys)
 
 
@@ -650,7 +635,7 @@ clip
 def check_pchk(
     *,
     input: Annotated[
-        str,
+        Path,
         typer.Argument(help="Input file"),
     ],
     format: Annotated[
@@ -682,12 +667,12 @@ def check_pchk(
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
 
-    if not os.path.isfile(input):
+    if not input.is_file():
         print(f"Input file given {input} does not exist.")
         exit(-1)
 
     try:
-        with open(input) as fl:
+        with input.open() as fl:
             # passing fl in as Iterable[str] allows for lazy loading, which when reading large flat files off of disk is handy.
             PchkMatrix.read(fl, format, delimiter=delimiter,
                             transpose=transpose)
@@ -701,11 +686,11 @@ def check_pchk(
 def convert_pchk(
     *,
     input: Annotated[
-        str,
+        Path,
         typer.Argument(help="Input file"),
     ],
     output: Annotated[
-        str | None,
+        Path | None,
         typer.Argument(
             help="Output file. If no file is specified, the output is printed to stdout."
         ),
@@ -770,15 +755,15 @@ def convert_pchk(
     The command will automatically determine whether the input specifies a binary or non-binary LDPC code.
     """
 
-    if not os.path.isfile(input):
+    if not input.is_file():
         print(f"Input file given {input} does not exist.")
         exit(-1)
-    if output is not None and not os.path.isdir(os.path.dirname(output)):
+    if output is not None and not output.parent.is_dir():
         print(f"Directory for output file given {output} does not exist.")
         exit(-1)
 
     try:
-        with open(input) as fl:
+        with input.open() as fl:
             # passing fl in as Iterable[str] allows for lazy loading, which when reading large flat files off of disk is handy.
             pchk = PchkMatrix.read(
                 fl, from_format, delimiter=in_delimiter, transpose=in_transpose
@@ -788,7 +773,7 @@ def convert_pchk(
         print(f"Ensure the input is a valid {from_format.value} file.")
         exit(-1)
 
-    with open(output, "w") if output else sys.stdout as fl:
+    with output.open("w") if output else sys.stdout as fl:
         fl.write(
             pchk.write(
                 to_format,
