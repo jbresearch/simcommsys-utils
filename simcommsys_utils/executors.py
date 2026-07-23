@@ -134,10 +134,17 @@ flock -u "$lock_fd"
     @abc.abstractmethod
     def run(
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
+        working_dir: str,
+        install_dir: str,
+        simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git",
+        simcommsys_branch: str = "master",
+        build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE,
+        build_arch: str = "native",
+        build_use_omp: bool = True,
+        build_use_mpi: bool = True,
+        build_use_gmp: bool = True,
+        build_use_cuda: bool = True,
         dry_run: bool = False,
         **jobparams,
     ):
