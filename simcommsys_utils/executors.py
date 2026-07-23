@@ -48,38 +48,57 @@ class SimcommsysJob:
 class SimcommsysExecutor(abc.ABC):
     def _get_build_cmd(
         self,
-        build_version: str,
-        plain_build: bool,
+        working_dir: str,
+        install_dir: str,
+        simcommsys_repo: str,
+        simcommsys_branch: str,
         build_config: SimcommsysBuildConfig,
-        source_url: str,
-        target_work_dir: str,
-        target_bin_dir: str,
+        build_arch: str,
+        build_use_omp: bool,
+        build_use_mpi: bool,
+        build_use_gmp: bool,
+        build_use_cuda: bool,
         workers: int = cpu_count()
     ):
-        build_target = "plain-" if plain_build else ""
-        build_target += f"install-main-{build_config.value}"
+        # determine build settings
+        build_settings = []
+        build_settings.append(f"-j{workers}")
+        build_settings.append(f"BINDIR={install_dir}")
+        build_settings.append(f"CONFIG={build_config.value}")
+        build_settings.append(f"USE_ARCH={build_arch}")
+        if not build_use_omp:
+            build_settings.append("USE_OMP=0")
+        if not build_use_mpi:
+            build_settings.append("USE_MPI=0")
+        if not build_use_gmp:
+            build_settings.append("USE_GMP=0")
+        if not build_use_cuda:
+            build_settings.append("USE_CUDA=0")
+        # main build target
+        build_target = "SimCommsys/SimCommsys"
+        # command sequence to check out, build, and install the target
         cmd = f"""
 set -euo pipefail
 # Make sure work directory exists
-mkdir -p {target_work_dir}
+mkdir -p {working_dir}
 # Open file descriptor for lock
-exec {{lock_fd}}>"{target_work_dir}/LOCK"
+exec {{lock_fd}}>"{working_dir}/LOCK"
 ## CRITICAL SECTION START
 flock -x "$lock_fd"
 # Clone the repo and build the binaries
-if [ -d {target_work_dir}/.git/ ]; then
+if [ -d {working_dir}/.git/ ]; then
     echo Existing working copy found, updating
-    git -C {target_work_dir} fetch origin
+    git -C {working_dir} fetch origin
 else
     echo No working copy found, cloning
-    git -C {target_work_dir} clone -n {source_url} .
+    git -C {working_dir} clone -n {simcommsys_repo} .
 fi
-echo Checking out {build_version}
-git -C {target_work_dir} checkout {build_version}
-echo Building binaries into {target_bin_dir}
-BINDIR={target_bin_dir} make -C {target_work_dir} -j {workers} {build_target}
+echo Checking out {simcommsys_branch}
+git -C {working_dir} checkout {simcommsys_branch}
+echo Building binaries into {install_dir}
+make -C {working_dir} {" ".join(build_settings)} {build_target}
 echo Done building binaries
-BUILD_VARIANT=$(make -C {target_work_dir} showbuildid 2>/dev/null)
+BUILD_VARIANT=$(make -C {working_dir} showbuildid 2>/dev/null)
 echo Build variant is $BUILD_VARIANT
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
