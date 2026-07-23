@@ -79,6 +79,7 @@ class SimcommsysExecutor(abc.ABC):
         # command sequence to check out, build, and install the target
         cmd = f"""
 set -euo pipefail
+exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
 mkdir -p {working_dir}
 # Open file descriptor for lock
@@ -91,7 +92,7 @@ if [ -d {working_dir}/.git/ ]; then
     git -C {working_dir} fetch origin
 else
     echo No working copy found, cloning
-    git -C {working_dir} clone -n {simcommsys_repo} .
+    git clone -n {simcommsys_repo} {working_dir}
 fi
 echo Checking out {simcommsys_branch}
 git -C {working_dir} checkout {simcommsys_branch}
@@ -99,9 +100,14 @@ echo Building binaries into {install_dir}
 make -C {working_dir} {" ".join(build_settings)} {build_target}
 echo Done building binaries
 BUILD_VARIANT=$(make -C {working_dir} showbuildid 2>/dev/null)
-echo Build variant is $BUILD_VARIANT
+echo Build variant: $BUILD_VARIANT
+BUILD_VERSION=$(make -C {working_dir} showversion 2>/dev/null)
+echo Build version: $BUILD_VERSION
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
+# print build variant and version to original stdout
+echo "$BUILD_VARIANT" >&1
+echo "$BUILD_VERSION" >&1
 """
         return cmd
 
@@ -193,14 +199,49 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
 
     def run(  # type:ignore
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
+        working_dir: str,
+        install_dir: str,
+        simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git",
+        simcommsys_branch: str = "master",
+        build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE,
+        build_arch: str = "native",
+        build_use_omp: bool = True,
+        build_use_mpi: bool = True,
+        build_use_gmp: bool = True,
+        build_use_cuda: bool = True,
         dry_run: bool = False,
         *,
         memlimit_gb: int | None = None,
     ):
+        # first compile the simulator
+        build_cmd = self._get_build_cmd(
+            working_dir,
+            install_dir,
+            simcommsys_repo,
+            simcommsys_branch,
+            build_config,
+            build_arch,
+            build_use_omp,
+            build_use_mpi,
+            build_use_gmp,
+            build_use_cuda,
+            self.workers,
+        )
+        if dry_run:
+            print(build_cmd)
+        else:
+            res = subprocess.run(build_cmd, shell=True,
+                                 check=True, capture_output=True, text=True)
+            try:
+                build_variant, build_version = res.stdout.splitlines()
+            except ValueError:
+                logging.error(
+                    "Could not parse build version and variant from build script output.")
+                logging.error(f"stdout was: {res.stdout}")
+                exit(-1)
+
+        # prepare list of simulation runs to do
         job_commands = []
         for job in jobs:
             # build command to submit to shell.
