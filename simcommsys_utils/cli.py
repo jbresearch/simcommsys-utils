@@ -915,7 +915,6 @@ def run_jobs(
             d = load(fl, Loader=Loader)
             config = RunJobsSpec.model_validate(
                 d | {"config_dir": config_file.parent.resolve()})
-
     except ValidationError as e:
         print(e)
         exit(-1)
@@ -936,11 +935,18 @@ def run_jobs(
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
             executor.run(
-                jobsspec.build_version,
-                jobsspec.build_variant,
-                cast(Literal["debug", "release", "profile"],
-                     jobsspec.build_config),
                 jobs=jobsspec.jobs,
+                working_dir=jobsspec.working_dir,
+                install_dir=jobsspec.install_dir,
+                simcommsys_repo=jobsspec.simcommsys_repo,
+                simcommsys_branch=jobsspec.simcommsys_branch,
+                build_config=cast(Literal["debug", "release", "profile"],
+                                  jobsspec.build_config),
+                build_arch=jobsspec.build_arch,
+                build_use_omp=jobsspec.build_use_omp,
+                build_use_mpi=jobsspec.build_use_mpi,
+                build_use_gmp=jobsspec.build_use_gmp,
+                build_use_cuda=jobsspec.build_use_cuda,
                 dry_run=dry_run,
                 **jobsspec.executor_kwargs,
             )
