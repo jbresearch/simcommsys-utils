@@ -272,6 +272,8 @@ class JobBatchSpec(BaseModel):
         if self.base_dir is None:
             self.base_dir = self.config_dir
         else:
+            # first expand any user homedir
+            self.base_dir = self.base_dir.expanduser()
             # make base_dir absolute if it is not
             if not self.base_dir.is_absolute():
                 self.base_dir = (self.config_dir / self.base_dir).resolve()
@@ -281,6 +283,8 @@ class JobBatchSpec(BaseModel):
                     f"Base directory {self.base_dir} does not exist or is not a directory"
                 )
 
+        # first expand any user homedir
+        self.output_dir = self.output_dir.expanduser()
         # make output_dir absolute if it is not
         if not self.output_dir.is_absolute():
             self.output_dir = (self.base_dir / self.output_dir).resolve()
@@ -290,6 +294,8 @@ class JobBatchSpec(BaseModel):
                 f"Output directory {self.output_dir} does not exist or is not a directory"
             )
 
+        # first expand any user homedir
+        self.log_dir = self.log_dir.expanduser()
         # make log_dir absolute if it is not
         if not self.log_dir.is_absolute():
             self.log_dir = (self.base_dir / self.log_dir).resolve()
@@ -299,6 +305,8 @@ class JobBatchSpec(BaseModel):
                 f"Log directory {self.log_dir} does not exist or is not a directory"
             )
 
+        # first expand any user homedir
+        self.working_dir = self.working_dir.expanduser()
         # make working_dir absolute if it is not
         if not self.working_dir.is_absolute():
             self.working_dir = (self.base_dir / self.working_dir).resolve()
@@ -308,6 +316,8 @@ class JobBatchSpec(BaseModel):
         #         f"Working directory {self.working_dir} does not exist or is not a directory"
         #     )
 
+        # first expand any user homedir
+        self.install_dir = self.install_dir.expanduser()
         # make install_dir absolute if it is not
         if not self.install_dir.is_absolute():
             self.install_dir = (self.base_dir / self.install_dir).resolve()
