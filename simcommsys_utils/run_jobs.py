@@ -116,30 +116,50 @@ class JobBatchSpec(BaseModel):
     # Value of the --floor-min Simcommsys parameter that each simulation in the group is invoked with.
     # Must be specified.
     floor_min: float
-    # Simcommsys build version.
-    # When Simcommsys is compiled, the produced binaries have the format
-    # simcommsys.<version>.<variant>.<config>, where <version> is the
-    # build version or commit specifier.
-    # build_version should be set to the value of <version> of the Simcommsys
-    # binary that you wish to run each simulation with.
+
+    # Simcommsys build parameters.
+
+    # Working directory where Simcommsys will be cloned and built.
+    # Normally this will be either an ignored subfolder of your project repo, or
+    # somewhere in your home directory, common to all projects using Simcommsys.
     # Must be specified.
-    build_version: str
-    # Simcommsys build variant.
-    # When Simcommsys is compiled, the produced binaries have the format
-    # simcommsys.<version>.<variant>.<config>, where <variant> is the build
-    # variant, depending on system architecture and included libraries.
-    # build_variant should be set to the value of <variant> of the Simcommsys
-    # binary that you wish to run each simulation with.
-    # Must be specified.
-    build_variant: str
-    # Simcommsys build configuration.
-    # When Simcommsys is compiled, the produced binaries have the format
-    # simcommsys.<version>.<variant>.<config>, where <config> is the build
-    # configuration (release | debug | profile).
-    # build_config should be set to the value of <config> of the Simcommsys
-    # binary that you wish to run each simulation with.
-    # Must be specified.
-    build_config: SimcommsysBuildConfig
+    working_dir: str
+    # The directory where Simcommsys binaries will be installed.
+    # Normally this will be either a temporary folder (i.e. under /tmp) or
+    # somewhere on the computational node's local storage.
+    # Must be specified, and must be in your path.
+    install_dir: str
+    # The source URL for Simcommsys.
+    # Defaults to the official public repository, but can be set manually to the
+    # development repo or a personal fork.
+    simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git"
+    # The branch (or commit reference) to be checked out.
+    # Defaults to master, but can be set to another branch, tag, or hash of a
+    # specific commit.
+    simcommsys_branch: str = "master"
+    # Simcommsys build configuration (release | debug | profile).
+    # Used to specify which configuration of the simulator libraries and binary
+    # need to be built and used.
+    # Defaults to release.
+    build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE
+    # Simcommsys build architecture.
+    # Used to specify which architecture to optimise for when building the
+    # simulator libraries and binary.
+    # Defaults to native (i.e. the architecture of the node in use).
+    build_arch: str = "native"
+    # Allow use of OpenMP features in Simcommsys.
+    # Defaults to True.
+    build_use_omp: bool = True
+    # Allow use of OpenMPI features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_mpi: bool = True
+    # Allow use of GnuMP features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_gmp: bool = True
+    # Allow use of CUDA features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_cuda: bool = True
+
     executor_kwargs: dict[str, Any] = {}
 
     @property
