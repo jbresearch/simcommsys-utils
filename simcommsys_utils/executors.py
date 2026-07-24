@@ -80,6 +80,7 @@ class SimcommsysExecutor(abc.ABC):
         cmd = f"""
 #!/bin/bash
 set -euo pipefail
+set -x
 exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
 mkdir -p {working_dir}
