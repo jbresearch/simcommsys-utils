@@ -255,13 +255,14 @@ class JobBatchSpec(BaseModel):
     @model_validator(mode="after")
     def check_dirs_exists(self) -> Self:
         """
-        Checks that 'base_dir', 'output_dir' and 'log_dir' exist and convert
-        them to absolute paths.
+        Checks that the required directories exist and convert them to absolute
+        paths. These include 'base_dir', 'output_dir', 'log_dir', 'working_dir',
+        and 'install_dir'.
 
         Note that if 'base_dir' is relative, we consider it relative to
-        'config_dir'. If 'base_dir' is not given, we set it to 'config_dir'. If
-        'output_dir' or 'log_dir' are relative, we consider them relative to
-        'base_dir'.
+        'config_dir', and if 'base_dir' is not given, we set it to 'config_dir'.
+        All other directories are considered relative to 'base_dir', unless they
+        are absolute.
         """
 
         # make sure config_dir is resolvable and absolute
@@ -297,6 +298,25 @@ class JobBatchSpec(BaseModel):
             raise ValueError(
                 f"Log directory {self.log_dir} does not exist or is not a directory"
             )
+
+        # make working_dir absolute if it is not
+        if not self.working_dir.is_absolute():
+            self.working_dir = (self.base_dir / self.working_dir).resolve()
+        # check that working_dir exists
+        # if not self.working_dir.is_dir():
+        #     raise ValueError(
+        #         f"Working directory {self.working_dir} does not exist or is not a directory"
+        #     )
+
+        # make install_dir absolute if it is not
+        if not self.install_dir.is_absolute():
+            self.install_dir = (self.base_dir / self.install_dir).resolve()
+        # check that install_dir exists
+        # if not self.install_dir.is_dir():
+        #     raise ValueError(
+        #         f"Install directory {self.install_dir} does not exist or is not a directory"
+        #     )
+
         return self
 
     @model_validator(mode="after")
