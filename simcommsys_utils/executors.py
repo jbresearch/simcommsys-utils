@@ -63,6 +63,7 @@ class SimcommsysExecutor(abc.ABC):
         # determine build settings
         build_settings = []
         build_settings.append(f"-j{workers}")
+        build_settings.append(f"DOTARGET=install")
         build_settings.append(f"BINDIR={install_dir}")
         build_settings.append(f"CONFIG={build_config.value}")
         build_settings.append(f"USE_ARCH={build_arch}")
