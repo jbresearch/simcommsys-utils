@@ -123,12 +123,12 @@ class JobBatchSpec(BaseModel):
     # Normally this will be either an ignored subfolder of your project repo, or
     # somewhere in your home directory, common to all projects using Simcommsys.
     # Must be specified.
-    working_dir: str
+    working_dir: Path
     # The directory where Simcommsys binaries will be installed.
     # Normally this will be either a temporary folder (i.e. under /tmp) or
     # somewhere on the computational node's local storage.
     # Must be specified, and must be in your path.
-    install_dir: str
+    install_dir: Path
     # The source URL for Simcommsys.
     # Defaults to the official public repository, but can be set manually to the
     # development repo or a personal fork.

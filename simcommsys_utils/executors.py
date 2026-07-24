@@ -48,8 +48,8 @@ class SimcommsysJob:
 class SimcommsysExecutor(abc.ABC):
     def _get_build_cmd(
         self,
-        working_dir: str,
-        install_dir: str,
+        working_dir: Path,
+        install_dir: Path,
         simcommsys_repo: str,
         simcommsys_branch: str,
         build_config: SimcommsysBuildConfig,
@@ -144,8 +144,8 @@ echo "$BUILD_VERSION" >&1
     def run(
         self,
         jobs: list[SimcommsysJob],
-        working_dir: str,
-        install_dir: str,
+        working_dir: Path,
+        install_dir: Path,
         simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git",
         simcommsys_branch: str = "master",
         build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE,
@@ -203,8 +203,8 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
     def run(  # type:ignore
         self,
         jobs: list[SimcommsysJob],
-        working_dir: str,
-        install_dir: str,
+        working_dir: Path,
+        install_dir: Path,
         simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git",
         simcommsys_branch: str = "master",
         build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE,
