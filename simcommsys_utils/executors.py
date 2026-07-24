@@ -248,6 +248,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             except ValueError:
                 logging.error("Could not parse build script output.")
                 logging.error(f"stdout was: {res.stdout}")
+                logging.error(f"stderr was: {res.stderr}")
                 exit(-1)
 
         # prepare list of simulation runs to do
