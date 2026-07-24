@@ -101,6 +101,10 @@ else
 fi
 echo Checking out {simcommsys_branch}
 git -C {working_dir} checkout {simcommsys_branch}
+echo Updating to the latest version of {simcommsys_branch}
+git -C {working_dir} reset --hard origin/{simcommsys_branch}
+echo Removing any extraneous files
+git -C {working_dir} clean -fde LOCK
 echo Building binaries into {install_dir}
 make -C {working_dir} {" ".join(build_settings)} {build_target}
 echo Done building binaries
