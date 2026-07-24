@@ -232,13 +232,19 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         if dry_run:
             print(build_cmd)
         else:
-            res = subprocess.run(build_cmd, shell=True,
-                                 check=True, capture_output=True, text=True, executable="/bin/bash")
+            try:
+                res = subprocess.run(build_cmd,
+                                     shell=True, check=True, capture_output=True,
+                                     text=True, executable="/bin/bash")
+            except CalledProcessError as e:
+                logging.error("Build script failed with a non-zero exit code.")
+                logging.error(f"stdout was: {e.stdout}")
+                logging.error(f"stderr was: {e.stderr}")
+                exit(-1)
             try:
                 build_variant, build_version = res.stdout.splitlines()
             except ValueError:
-                logging.error(
-                    "Could not parse build version and variant from build script output.")
+                logging.error("Could not parse build script output.")
                 logging.error(f"stdout was: {res.stdout}")
                 exit(-1)
 
