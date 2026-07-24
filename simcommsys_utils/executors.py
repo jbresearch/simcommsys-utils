@@ -108,9 +108,9 @@ git -C {working_dir} clean -fde LOCK
 echo "Building binaries into {install_dir}..."
 make --no-print-directory -C {working_dir} {" ".join(build_settings)} {build_target}
 echo Done building binaries
-BUILD_VARIANT=$(make --no-print-directory -C {working_dir} showbuildid 2>/dev/null)
+BUILD_VARIANT=$(make --no-print-directory -C {working_dir} {" ".join(build_settings)} showbuildid 2>/dev/null)
 echo Build variant: $BUILD_VARIANT
-BUILD_VERSION=$(make --no-print-directory -C {working_dir} showversion 2>/dev/null)
+BUILD_VERSION=$(make --no-print-directory -C {working_dir} {" ".join(build_settings)} showversion 2>/dev/null)
 echo Build version: $BUILD_VERSION
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
