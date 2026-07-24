@@ -264,25 +264,25 @@ class JobBatchSpec(BaseModel):
         'base_dir'.
         """
 
+        # make sure config_dir is resolvable and absolute
         self.config_dir = self.config_dir.resolve()
 
-        if self.base_dir is not None:
+        # set base_dir if necessary, and make it absolute
+        if self.base_dir is None:
+            self.base_dir = self.config_dir
+        else:
             # make base_dir absolute if it is not
             if not self.base_dir.is_absolute():
-                self.base_dir = self.config_dir / self.base_dir
+                self.base_dir = (self.config_dir / self.base_dir).resolve()
             # check that base_dir exists
             if not self.base_dir.is_dir():
                 raise ValueError(
                     f"Base directory {self.base_dir} does not exist or is not a directory"
                 )
-        else:
-            self.base_dir = self.config_dir
-
-        self.base_dir = self.base_dir.resolve()
 
         # make output_dir absolute if it is not
         if not self.output_dir.is_absolute():
-            self.output_dir = self.base_dir / self.output_dir
+            self.output_dir = (self.base_dir / self.output_dir).resolve()
         # check that output_dir exists
         if not self.output_dir.is_dir():
             raise ValueError(
@@ -291,11 +291,11 @@ class JobBatchSpec(BaseModel):
 
         # make log_dir absolute if it is not
         if not self.log_dir.is_absolute():
-            self.log_dir = self.base_dir / self.log_dir
+            self.log_dir = (self.base_dir / self.log_dir).resolve()
         # check that log_dir exists
         if not self.log_dir.is_dir():
             raise ValueError(
-                f"Output directory {self.log_dir} does not exist or is not a directory"
+                f"Log directory {self.log_dir} does not exist or is not a directory"
             )
         return self
 
