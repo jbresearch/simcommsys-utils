@@ -78,6 +78,7 @@ class SimcommsysExecutor(abc.ABC):
         build_target = "SimCommsys/SimCommsys"
         # command sequence to check out, build, and install the target
         cmd = f"""
+#!/bin/bash
 set -euo pipefail
 exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
@@ -232,7 +233,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             print(build_cmd)
         else:
             res = subprocess.run(build_cmd, shell=True,
-                                 check=True, capture_output=True, text=True)
+                                 check=True, capture_output=True, text=True, executable="/bin/bash")
             try:
                 build_variant, build_version = res.stdout.splitlines()
             except ValueError:
