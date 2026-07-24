@@ -81,6 +81,7 @@ class SimcommsysExecutor(abc.ABC):
         cmd = f"""
 #!/bin/bash
 set -euo pipefail
+exec 3>&1 # save original stdout
 exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
 mkdir -p {working_dir}
@@ -114,8 +115,9 @@ echo Build version: $BUILD_VERSION
 ## CRITICAL SECTION END
 flock -u "$lock_fd"
 # print build variant and version to original stdout
-echo "$BUILD_VARIANT" >&1
-echo "$BUILD_VERSION" >&1
+echo "$BUILD_VARIANT" >&3
+echo "$BUILD_VERSION" >&3
+exec 3>&- # close original stdout
 """
         return cmd
 
