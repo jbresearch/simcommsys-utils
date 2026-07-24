@@ -92,8 +92,10 @@ if [ -d {working_dir}/.git/ ]; then
     echo Existing working copy found, updating
     git -C {working_dir} fetch origin
 else
-    echo No working copy found, cloning
-    git clone -n {simcommsys_repo} {working_dir}
+    echo No working copy found, initializing new one
+    git -C {working_dir} init
+    git -C {working_dir} remote add origin {simcommsys_repo}
+    git -C {working_dir} fetch origin
 fi
 echo Checking out {simcommsys_branch}
 git -C {working_dir} checkout {simcommsys_branch}
