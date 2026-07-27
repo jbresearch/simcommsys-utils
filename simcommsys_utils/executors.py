@@ -48,6 +48,7 @@ class SimcommsysJob:
 class SimcommsysExecutor(abc.ABC):
     def _get_build_cmd(
         self,
+        workers: int,
         working_dir: Path,
         install_dir: Path,
         simcommsys_repo: str,
@@ -58,7 +59,6 @@ class SimcommsysExecutor(abc.ABC):
         build_use_mpi: bool,
         build_use_gmp: bool,
         build_use_cuda: bool,
-        workers: int = cpu_count()
     ):
         # determine build settings
         build_settings = []
@@ -129,11 +129,11 @@ exec 3>&- # close original stdout
                       build_use_gmp, build_use_cuda,
                       dry_run):
         build_cmd = self._get_build_cmd(
+            self.workers,
             working_dir, install_dir,
             simcommsys_repo, simcommsys_branch,
             build_config, build_arch,
             build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
-            self.workers,
         )
         if dry_run:
             print(build_cmd)
