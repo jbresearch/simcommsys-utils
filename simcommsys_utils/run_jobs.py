@@ -245,9 +245,10 @@ class JobBatchSpec(BaseModel):
             raise ValueError(
                 "Cannot have executor_kwargs as field in job group.")
         # apply reflection, and place any additional keys in obj that are not a part of model into executor_kwargs
-        flds = set(cls.model_fields.keys())
+        model_fields = set(cls.model_fields.keys())
+        aliased_fields = {"build_settings"}
         obj["executor_kwargs"] = {k: obj.pop(k)
-                                  for k in set(obj.keys()) - flds}
+                                  for k in set(obj.keys()) - model_fields - aliased_fields}
         return super().model_validate(
             obj, strict=strict, from_attributes=from_attributes, context=context
         )
