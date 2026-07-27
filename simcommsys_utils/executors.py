@@ -121,19 +121,26 @@ exec 3>&- # close original stdout
 """
         return cmd
 
-    def _build_binary(self, working_dir, install_dir,
-                      simcommsys_repo, simcommsys_branch,
-                      build_config, build_arch,
-                      build_use_omp, build_use_mpi,
-                      build_use_gmp, build_use_cuda,
-                      dry_run):
+    def _build_binary(self,
+                      working_dir: Path,
+                      install_dir: Path,
+                      simcommsys_repo: str,
+                      simcommsys_branch: str,
+                      build_config: SimcommsysBuildConfig,
+                      build_arch: str,
+                      build_use_omp: bool,
+                      build_use_mpi: bool,
+                      build_use_gmp: bool,
+                      build_use_cuda: bool,
+                      build_target: str,
+                      dry_run: bool) -> Path:
         build_cmd = self._get_build_cmd(
             self.workers,
             working_dir, install_dir,
             simcommsys_repo, simcommsys_branch,
             build_config, build_arch,
             build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
-            "SimCommsys/SimCommsys"
+            build_target
         )
         if dry_run:
             print(build_cmd)
@@ -261,7 +268,10 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
     ):
         # first compile the simulator
         build_variant, build_version = self._build_binary(working_dir, install_dir, simcommsys_repo, simcommsys_branch,
-                                                          build_config, build_arch, build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda, dry_run)
+                                             build_config, build_arch,
+                                             build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
+                                             "SimCommsys/SimCommsys",
+                                             dry_run)
 
         # prepare list of simulation runs to do
         job_commands = []
