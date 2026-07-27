@@ -92,6 +92,13 @@ class BuildSettingsSpec(BaseModel):
     # Defaults to True.
     build_use_cuda: bool = True
 
+    @property
+    def build_settings(self) -> SimcommsysBuildSettings:
+        """
+        Creates a SimcommsysBuildSettings object from the specification.
+        """
+        return SimcommsysBuildSettings(**self.model_dump())
+
 
 class JobBatchSpec(BaseModel):
     """
@@ -166,12 +173,7 @@ class JobBatchSpec(BaseModel):
 
     @property
     def build_settings(self) -> SimcommsysBuildSettings:
-        """
-        Creates a SimcommsysBuildSettings object from the build_settings specification.
-        """
-        return SimcommsysBuildSettings(
-            **self.build_settings_spec.model_dump()
-        )
+        return self.build_settings_spec.build_settings
 
     executor_kwargs: dict[str, Any] = {}
 
