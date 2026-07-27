@@ -163,7 +163,7 @@ class JobBatchSpec(BaseModel):
     # Must be specified.
     floor_min: float
     # Simcommsys build settings
-    _build_settings_spec: BuildSettingsSpec = Field(alias="build_settings")
+    build_settings_spec: BuildSettingsSpec = Field(alias="build_settings")
 
     @property
     def build_settings(self) -> SimcommsysBuildSettings:
@@ -171,7 +171,7 @@ class JobBatchSpec(BaseModel):
         Creates a SimcommsysBuildSettings object from the build_settings specification.
         """
         return SimcommsysBuildSettings(
-            **self._build_settings_spec.model_dump()
+            **self.build_settings_spec.model_dump()
         )
 
     executor_kwargs: dict[str, Any] = {}
@@ -320,18 +320,18 @@ class JobBatchSpec(BaseModel):
             )
 
         # first expand any user homedir
-        self._build_settings_spec.working_dir = self._build_settings_spec.working_dir.expanduser()
+        self.build_settings_spec.working_dir = self.build_settings_spec.working_dir.expanduser()
         # make working_dir absolute if it is not
-        if not self._build_settings_spec.working_dir.is_absolute():
-            self._build_settings_spec.working_dir = (
-                self.base_dir / self._build_settings_spec.working_dir).resolve()
+        if not self.build_settings_spec.working_dir.is_absolute():
+            self.build_settings_spec.working_dir = (
+                self.base_dir / self.build_settings_spec.working_dir).resolve()
 
         # first expand any user homedir
-        self._build_settings_spec.install_dir = self._build_settings_spec.install_dir.expanduser()
+        self.build_settings_spec.install_dir = self.build_settings_spec.install_dir.expanduser()
         # make install_dir absolute if it is not
-        if not self._build_settings_spec.install_dir.is_absolute():
-            self._build_settings_spec.install_dir = (
-                self.base_dir / self._build_settings_spec.install_dir).resolve()
+        if not self.build_settings_spec.install_dir.is_absolute():
+            self.build_settings_spec.install_dir = (
+                self.base_dir / self.build_settings_spec.install_dir).resolve()
 
         return self
 
