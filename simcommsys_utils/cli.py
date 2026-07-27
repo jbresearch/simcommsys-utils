@@ -954,12 +954,9 @@ def run_jobs(
 
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
-            build_settings = SimcommsysBuildSettings(
-                **jobsspec.build_settings.model_dump()
-            )
             executor.run(
                 jobs=jobsspec.jobs,
-                build_settings=build_settings,
+                build_settings=jobsspec.build_settings,
                 dry_run=dry_run,
                 **jobsspec.executor_kwargs,
             )
