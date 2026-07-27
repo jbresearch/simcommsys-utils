@@ -19,11 +19,10 @@ from typing import Any, Annotated, Optional
 from pathlib import Path
 from typing_extensions import Self
 import re
-import os
 from glob import glob
 import logging
 
-from pydantic import BaseModel, ConfigDict, model_validator, StringConstraints, AfterValidator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, AfterValidator
 
 from simcommsys_utils.executors import (
     SimcommsysExecutorType,
