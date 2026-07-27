@@ -36,7 +36,7 @@ except ImportError:
 
 from simcommsys_utils.run_jobs import RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
-from simcommsys_utils.executors import SimcommsysBuildConfig, SimcommsysBuildSettings
+from simcommsys_utils.executors import SimcommsysBuildConfig
 
 app = typer.Typer()
 
