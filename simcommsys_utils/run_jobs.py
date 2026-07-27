@@ -310,22 +310,12 @@ class JobBatchSpec(BaseModel):
         # make working_dir absolute if it is not
         if not self.working_dir.is_absolute():
             self.working_dir = (self.base_dir / self.working_dir).resolve()
-        # check that working_dir exists
-        # if not self.working_dir.is_dir():
-        #     raise ValueError(
-        #         f"Working directory {self.working_dir} does not exist or is not a directory"
-        #     )
 
         # first expand any user homedir
         self.install_dir = self.install_dir.expanduser()
         # make install_dir absolute if it is not
         if not self.install_dir.is_absolute():
             self.install_dir = (self.base_dir / self.install_dir).resolve()
-        # check that install_dir exists
-        # if not self.install_dir.is_dir():
-        #     raise ValueError(
-        #         f"Install directory {self.install_dir} does not exist or is not a directory"
-        #     )
 
         return self
 
