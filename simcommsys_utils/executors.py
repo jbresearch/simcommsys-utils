@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Mark Mizzi
+# Copyright (c) 2024-2026 Mark Mizzi, Johann A. Briffa
 #
 # This file is part of SimCommSys.
 #
