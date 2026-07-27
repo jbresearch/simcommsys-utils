@@ -106,17 +106,14 @@ git -C {working_dir} clean -fde LOCK
 echo "Building binaries into {install_dir}..."
 make --no-print-directory -C {working_dir} {" ".join(build_settings)} {build_target}
 echo Done building binaries
-BUILD_VARIANT=$(make --no-print-directory -C {working_dir} {" ".join(build_settings)} showbuildid 2>/dev/null)
-echo Build variant: $BUILD_VARIANT
-BUILD_VERSION=$(make --no-print-directory -C {working_dir} {" ".join(build_settings)} showversion 2>/dev/null)
-echo Build version: $BUILD_VERSION
+BINARY_FILENAME=$(make --no-print-directory -C {working_dir} {" ".join(build_settings[2:])} DOTARGET=showfinal {build_target} 2>/dev/null |tail -1)
+echo Binary filename: $BINARY_FILENAME
 ## CRITICAL SECTION END
 rm -f "{working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
 flock -u "$lock_fd" # release the lock
 exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
-# print build variant and version to original stdout
-echo "$BUILD_VARIANT" >&3
-echo "$BUILD_VERSION" >&3
+# print binary filename to original stdout
+echo "$BINARY_FILENAME" >&3
 exec 3>&- # close original stdout
 """
         return cmd
@@ -154,20 +151,17 @@ exec 3>&- # close original stdout
                 logging.error(f"stdout was: {e.stdout}")
                 logging.error(f"stderr was: {e.stderr}")
                 exit(-1)
-            try:
-                build_variant, build_version = res.stdout.splitlines()
-            except ValueError:
-                logging.error("Could not parse build script output.")
+            binary_filename = Path(res.stdout).resolve()
+            if not binary_filename.is_file():
+                logging.error("Could not identify binary from build script.")
                 logging.error(f"stdout was: {res.stdout}")
                 logging.error(f"stderr was: {res.stderr}")
                 exit(-1)
-        return build_variant, build_version
+        return binary_filename
 
     def _get_simcommsys_cmd(
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
+        binary_filename: Path,
         job: SimcommsysJob,
     ):
         """
@@ -179,7 +173,7 @@ exec 3>&- # close original stdout
         for prange in job.param_ranges:
             param_ranges += f"--param-range {prange}"
 
-        return f"simcommsys.{build_version}.{build_variant}.{build_config.value} \
+        return f"{binary_filename} \
                     -i {job.inputfile} \
                     -o {job.outputfile} \
                     {param_ranges} \
@@ -267,7 +261,8 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None = None,
     ):
         # first compile the simulator
-        build_variant, build_version = self._build_binary(working_dir, install_dir, simcommsys_repo, simcommsys_branch,
+        binary_filename = self._build_binary(working_dir, install_dir,
+                                             simcommsys_repo, simcommsys_branch,
                                              build_config, build_arch,
                                              build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
                                              "SimCommsys/SimCommsys",
@@ -278,7 +273,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         for job in jobs:
             # build command to submit to shell.
             simcommsys_cmd = self._get_simcommsys_cmd(
-                build_version, build_variant, build_config, job
+                binary_filename, job
             )
             cmd = ""
             if memlimit_gb is not None:
