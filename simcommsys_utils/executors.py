@@ -85,10 +85,9 @@ exec 3>&1 # save original stdout
 exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
 mkdir -p {working_dir}
-# Open file descriptor for lock
-exec {{lock_fd}}>"{working_dir}/LOCK"
 ## CRITICAL SECTION START
-flock -x "$lock_fd"
+exec {{lock_fd}}>"{working_dir}/LOCK" # open file descriptor for lock
+flock -x "$lock_fd" # acquire the lock
 # Clone the repo and build the binaries
 if [ -d {working_dir}/.git/ ]; then
     echo Existing working copy found, updating
@@ -113,7 +112,9 @@ echo Build variant: $BUILD_VARIANT
 BUILD_VERSION=$(make --no-print-directory -C {working_dir} {" ".join(build_settings)} showversion 2>/dev/null)
 echo Build version: $BUILD_VERSION
 ## CRITICAL SECTION END
-flock -u "$lock_fd"
+rm -f "{working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
+flock -u "$lock_fd" # release the lock
+exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
 # print build variant and version to original stdout
 echo "$BUILD_VARIANT" >&3
 echo "$BUILD_VERSION" >&3
