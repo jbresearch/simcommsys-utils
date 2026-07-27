@@ -59,6 +59,7 @@ class SimcommsysExecutor(abc.ABC):
         build_use_mpi: bool,
         build_use_gmp: bool,
         build_use_cuda: bool,
+        build_target: str
     ):
         # determine build settings
         build_settings = []
@@ -75,8 +76,6 @@ class SimcommsysExecutor(abc.ABC):
             build_settings.append("USE_GMP=0")
         if not build_use_cuda:
             build_settings.append("USE_CUDA=0")
-        # main build target
-        build_target = "SimCommsys/SimCommsys"
         # command sequence to check out, build, and install the target
         cmd = f"""
 #!/bin/bash
@@ -134,6 +133,7 @@ exec 3>&- # close original stdout
             simcommsys_repo, simcommsys_branch,
             build_config, build_arch,
             build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
+            "SimCommsys/SimCommsys"
         )
         if dry_run:
             print(build_cmd)
