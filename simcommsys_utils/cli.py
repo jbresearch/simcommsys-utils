@@ -16,6 +16,7 @@
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from multiprocessing import cpu_count
 import os
 from pathlib import Path
 from typing import Annotated, Literal, cast, List
@@ -34,8 +35,8 @@ try:
 except ImportError:
     from yaml import Loader  # type:ignore
 
-from simcommsys_utils.build import SimcommsysBuildConfig
-from simcommsys_utils.run_jobs import RunJobsSpec
+from simcommsys_utils.build import SimcommsysBuildConfig, build_binary
+from simcommsys_utils.run_jobs import BuildSettingsSpec, RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
 
 app = typer.Typer()
@@ -104,22 +105,10 @@ def make_simulators(
             help="List of stream lengths to work with for termination. Only applicable to commsys_stream. Default is [1]."
         ),
     ] = None,
-    build_version: Annotated[
-        str,
+    build_settings: Annotated[
+        Path,
         typer.Option(
-            help="Build version (or commit specifier) of Simcommsys binary used to get input alphabetsize."
-        ),
-    ] = "master",
-    build_variant: Annotated[
-        str,
-        typer.Option(
-            help="Build variant of Simcommsys binary used to get input alphabetsize."
-        ),
-    ] = None,
-    build_config: Annotated[
-        SimcommsysBuildConfig | None,
-        typer.Option(
-            help="Build configuration of Simcommsys binary used to get input alphabetsize."
+            help="Path to configuration file with Simcommsys settings for building binary used to get input alphabetsize."
         ),
     ] = None,
 ):
@@ -127,13 +116,24 @@ def make_simulators(
     Create Simcommsys simulator files from a set of Simcommsys system files in --input-dir.
     """
 
-    build_config = build_config or SimcommsysBuildConfig.RELEASE
-    assert build_variant
-    getsystemparams_filename = f"getsystemparams.{build_version}.{build_variant}.{build_config.value}"
-
-    if not shutil.which(getsystemparams_filename):
-        print(f"Required binary {getsystemparams_filename} not found in path.")
+    assert build_settings
+    if not build_settings.is_file():
+        print(f"Specified configuration file {build_settings} does not exist.")
         exit(-1)
+
+    config: BuildSettingsSpec
+    try:
+        with build_settings.open("r") as fl:
+            d = load(fl, Loader=Loader)
+            config = BuildSettingsSpec.model_validate(d)
+    except ValidationError as e:
+        print(e)
+        exit(-1)
+
+    # first compile the getsystemparams tool
+    binary_filename = build_binary(
+        config.build_settings, "SimCommsys/GetSystemParams", cpu_count())
+
     if not input_dir.is_dir():
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
@@ -255,7 +255,7 @@ def make_simulators(
             alphabetsize: int
             # read alphabetsize from system file (we use simcommsys for this)
             with os.popen(
-                f"{getsystemparams_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
+                f"{binary_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
                 mode="r",
             ) as pipe:
                 data = json.load(pipe)
@@ -327,36 +327,34 @@ def make_timers(
             help="Output directory where Simcommsys timer files will be generated."
         ),
     ],
-    build_version: Annotated[
-        str,
+    build_settings: Annotated[
+        Path,
         typer.Option(
-            help="Build version (or commit specifier) of Simcommsys binary used to get input alphabetsize."
+            help="Path to configuration file with Simcommsys settings for building binary used to get input alphabetsize."
         ),
-    ] = "master",
-    build_variant: Annotated[
-        str,
-        typer.Option(
-            help="Build variant of Simcommsys binary used to get input alphabetsize."
-        ),
-    ] = None,
-    build_config: Annotated[
-        SimcommsysBuildConfig | None,
-        typer.Option(
-            help="Build configuration of Simcommsys binary used to get input alphabetsize."
-        ),
-    ] = None,
+    ],
 ):
     """
     Create Simcommsys timer files from a set of Simcommsys system files in --input-dir.
     """
 
-    build_config = build_config or SimcommsysBuildConfig.RELEASE
-    assert build_variant
-    getsystemparams_filename = f"getsystemparams.{build_version}.{build_variant}.{build_config.value}"
-
-    if not shutil.which(getsystemparams_filename):
-        print(f"Required binary {getsystemparams_filename} not found in path.")
+    if not build_settings.is_file():
+        print(f"Specified configuration file {build_settings} does not exist.")
         exit(-1)
+
+    config: BuildSettingsSpec
+    try:
+        with build_settings.open("r") as fl:
+            d = load(fl, Loader=Loader)
+            config = BuildSettingsSpec.model_validate(d)
+    except ValidationError as e:
+        print(e)
+        exit(-1)
+
+    # first compile the getsystemparams tool
+    binary_filename = build_binary(
+        config.build_settings, "SimCommsys/GetSystemParams", cpu_count())
+
     if not input_dir.is_dir():
         print(f"Input directory given {input_dir} does not exist.")
         exit(-1)
@@ -374,7 +372,7 @@ def make_timers(
                 alphabetsize: int
                 # read alphabetsize from system file (we use simcommsys for this)
                 with os.popen(
-                    f"{getsystemparams_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
+                    f"{binary_filename} --param input-alphabetsize --system-file {syspath} --type {match.group(1)} --container {match.group(2)}",
                     mode="r",
                 ) as pipe:
                     data = json.load(pipe)
