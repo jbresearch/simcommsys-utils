@@ -325,10 +325,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 
     def run(  # type:ignore
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
+        build_settings: SimcommsysBuildSettings,
         dry_run: bool = False,
         *,
         partition: str,
@@ -381,10 +379,8 @@ class SlurmMasterSlaveSimcommsysExecutor(
 ):
     def run(  # type:ignore
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
+        build_settings: SimcommsysBuildSettings,
         dry_run: bool = False,
         *,
         partition: str,
