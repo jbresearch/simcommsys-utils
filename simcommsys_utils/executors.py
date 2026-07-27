@@ -121,6 +121,40 @@ exec 3>&- # close original stdout
 """
         return cmd
 
+    def _build_binary(self, working_dir, install_dir,
+                      simcommsys_repo, simcommsys_branch,
+                      build_config, build_arch,
+                      build_use_omp, build_use_mpi,
+                      build_use_gmp, build_use_cuda,
+                      dry_run):
+        build_cmd = self._get_build_cmd(
+            working_dir, install_dir,
+            simcommsys_repo, simcommsys_branch,
+            build_config, build_arch,
+            build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda,
+            self.workers,
+        )
+        if dry_run:
+            print(build_cmd)
+        else:
+            try:
+                res = subprocess.run(build_cmd,
+                                     shell=True, check=True, capture_output=True,
+                                     text=True, executable="/bin/bash")
+            except CalledProcessError as e:
+                logging.error("Build script failed with a non-zero exit code.")
+                logging.error(f"stdout was: {e.stdout}")
+                logging.error(f"stderr was: {e.stderr}")
+                exit(-1)
+            try:
+                build_variant, build_version = res.stdout.splitlines()
+            except ValueError:
+                logging.error("Could not parse build script output.")
+                logging.error(f"stdout was: {res.stdout}")
+                logging.error(f"stderr was: {res.stderr}")
+                exit(-1)
+        return build_variant, build_version
+
     def _get_simcommsys_cmd(
         self,
         build_version: str,
@@ -225,38 +259,8 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None = None,
     ):
         # first compile the simulator
-        build_cmd = self._get_build_cmd(
-            working_dir,
-            install_dir,
-            simcommsys_repo,
-            simcommsys_branch,
-            build_config,
-            build_arch,
-            build_use_omp,
-            build_use_mpi,
-            build_use_gmp,
-            build_use_cuda,
-            self.workers,
-        )
-        if dry_run:
-            print(build_cmd)
-        else:
-            try:
-                res = subprocess.run(build_cmd,
-                                     shell=True, check=True, capture_output=True,
-                                     text=True, executable="/bin/bash")
-            except CalledProcessError as e:
-                logging.error("Build script failed with a non-zero exit code.")
-                logging.error(f"stdout was: {e.stdout}")
-                logging.error(f"stderr was: {e.stderr}")
-                exit(-1)
-            try:
-                build_variant, build_version = res.stdout.splitlines()
-            except ValueError:
-                logging.error("Could not parse build script output.")
-                logging.error(f"stdout was: {res.stdout}")
-                logging.error(f"stderr was: {res.stderr}")
-                exit(-1)
+        build_variant, build_version = self._build_binary(working_dir, install_dir, simcommsys_repo, simcommsys_branch,
+                                                          build_config, build_arch, build_use_omp, build_use_mpi, build_use_gmp, build_use_cuda, dry_run)
 
         # prepare list of simulation runs to do
         job_commands = []
