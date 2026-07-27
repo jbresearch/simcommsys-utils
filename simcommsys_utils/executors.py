@@ -154,18 +154,15 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
 
     def _get_masterslave_cmd(
         self,
+        binary_filename: Path,
         job: SimcommsysJob,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         port: int,
         update_port_if_in_use: bool,
         workers: int,
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
-        simcommsys_cmd = self._get_simcommsys_cmd(
-            build_version, build_variant, build_config, job)
+        simcommsys_cmd = self._get_simcommsys_cmd(binary_filename, job)
         # logfile where output from workers will be stored.
         worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
         ulimit_cmd = ""
@@ -211,7 +208,7 @@ done
 # Launch the workers in the background
 for i in $(seq 1 {workers}); do
     echo "Starting worker $i"
-    simcommsys.{build_version}.{build_variant}.{build_config.value} -q -e localhost:$port 1>"{worker_logfile}" 2>&1 &
+    {binary_filename} -q -e localhost:$port 1>"{worker_logfile}" 2>&1 &
 done
 
 handler () {{
@@ -229,10 +226,8 @@ echo "Finished simulation of {job.name} with {workers} workers."
 
     def run(  # type:ignore
         self,
-        build_version: str,
-        build_variant: str,
-        build_config: SimcommsysBuildConfig,
         jobs: list[SimcommsysJob],
+        build_settings: SimcommsysBuildSettings,
         dry_run: bool = False,
         *,
         memlimit_gb: int | None = None,
@@ -255,10 +250,13 @@ echo "Finished simulation of {job.name} with {workers} workers."
                 f"Invalid value supplied for port: {port}, must be integer.")
             exit(-1)
 
+        # first compile the simulator
+        binary_filename = build_binary(build_settings, "SimCommsys/SimCommsys")
+        # start simulations
         for job in jobs:
             # build command to submit to shell.
             cmd = self._get_masterslave_cmd(
-                job, build_version, build_variant, build_config,
+                binary_filename, job,
                 port, update_port_if_in_use, workers, memlimit_gb
             )
             if dry_run:
