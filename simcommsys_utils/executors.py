@@ -24,7 +24,7 @@ import multiprocessing
 from multiprocessing import cpu_count
 from enum import Enum
 
-from simcommsys_utils.build import SimcommsysBuildSettings, build_binary
+from simcommsys_utils.build import SimcommsysBuildConfig, SimcommsysBuildSettings, build_binary
 
 
 @dataclass

@@ -16,6 +16,7 @@
 # along with SimCommSys.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from dataclasses import dataclass
 from enum import Enum
 import logging
 from pathlib import Path
