@@ -868,7 +868,6 @@ def run_jobs(
             # in the group is invoked with.
             # Must be specified.
             floor_min: <float>
-
             # Simcommsys build parameters.
             build_settings:
                 # Working directory where Simcommsys will be cloned and built.
@@ -911,7 +910,6 @@ def run_jobs(
                 # Allow use of CUDA features in Simcommsys (if available).
                 # Defaults to True.
                 build_use_cuda: <bool>
-
             # additional dynamic params that are specific to an executor type.
             [key: value]*
         ]*
