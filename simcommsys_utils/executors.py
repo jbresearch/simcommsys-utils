@@ -61,20 +61,20 @@ class SimcommsysExecutor(abc.ABC):
         build_target: str
     ):
         # determine build settings
-        build_settings = []
-        build_settings.append(f"-j{workers}")
-        build_settings.append(f"DOTARGET=install")
-        build_settings.append(f"BINDIR={install_dir}")
-        build_settings.append(f"CONFIG={build_config.value}")
-        build_settings.append(f"USE_ARCH={build_arch}")
+        build_args = []
+        build_args.append(f"-j{workers}")
+        build_args.append(f"DOTARGET=install")
+        build_args.append(f"BINDIR={install_dir}")
+        build_args.append(f"CONFIG={build_config.value}")
+        build_args.append(f"USE_ARCH={build_arch}")
         if not build_use_omp:
-            build_settings.append("USE_OMP=0")
+            build_args.append("USE_OMP=0")
         if not build_use_mpi:
-            build_settings.append("USE_MPI=0")
+            build_args.append("USE_MPI=0")
         if not build_use_gmp:
-            build_settings.append("USE_GMP=0")
+            build_args.append("USE_GMP=0")
         if not build_use_cuda:
-            build_settings.append("USE_CUDA=0")
+            build_args.append("USE_CUDA=0")
         # command sequence to check out, build, and install the target
         cmd = f"""
 #!/bin/bash
@@ -103,9 +103,9 @@ git -C {working_dir} reset --hard origin/{simcommsys_branch}
 echo Removing any extraneous files
 git -C {working_dir} clean -fde LOCK
 echo "Building binaries into {install_dir}..."
-make --no-print-directory -C {working_dir} {" ".join(build_settings)} {build_target}
+make --no-print-directory -C {working_dir} {" ".join(build_args)} {build_target}
 echo Done building binaries
-BINARY_FILENAME=$(make --no-print-directory -C {working_dir} {" ".join(build_settings[2:])} DOTARGET=showfinal {build_target} 2>/dev/null |tail -1)
+BINARY_FILENAME=$(make --no-print-directory -C {working_dir} {" ".join(build_args[2:])} DOTARGET=showfinal {build_target} 2>/dev/null |tail -1)
 echo Binary filename: $BINARY_FILENAME
 ## CRITICAL SECTION END
 rm -f "{working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
