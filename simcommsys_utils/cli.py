@@ -36,7 +36,7 @@ except ImportError:
 
 from simcommsys_utils.run_jobs import RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
-from simcommsys_utils.executors import SimcommsysBuildConfig
+from simcommsys_utils.executors import SimcommsysBuildConfig, SimcommsysBuildSettings
 
 app = typer.Typer()
 
@@ -954,8 +954,7 @@ def run_jobs(
 
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
-            executor.run(
-                jobs=jobsspec.jobs,
+            build_settings = SimcommsysBuildSettings(
                 working_dir=jobsspec.working_dir,
                 install_dir=jobsspec.install_dir,
                 simcommsys_repo=jobsspec.simcommsys_repo,
@@ -967,6 +966,10 @@ def run_jobs(
                 build_use_mpi=jobsspec.build_use_mpi,
                 build_use_gmp=jobsspec.build_use_gmp,
                 build_use_cuda=jobsspec.build_use_cuda,
+            )
+            executor.run(
+                jobs=jobsspec.jobs,
+                build_settings=build_settings,
                 dry_run=dry_run,
                 **jobsspec.executor_kwargs,
             )
