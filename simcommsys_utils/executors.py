@@ -27,6 +27,20 @@ from enum import Enum
 from simcommsys_utils.build import SimcommsysBuildConfig, SimcommsysBuildSettings, build_binary
 
 
+def _validate_param_as_int(value: Any, param_name: str) -> int:
+    """
+    Validates if a given value can be converted to an integer and returns it.
+    Logs an error and exits if the conversion fails.
+    """
+    try:
+        return value if isinstance(value, int) else int(value)
+    except (ValueError, TypeError):
+        logging.error(
+            f"Invalid value supplied for {param_name}: {value}, must be an integer."
+        )
+        exit(-1)
+
+
 @dataclass
 class SimcommsysJob:
     name: str
@@ -236,20 +250,8 @@ echo "Finished simulation of {job.name} with {workers} workers."
         update_port_if_in_use: bool = False,
         workers: int | str = cpu_count(),
     ):
-        try:
-            workers = workers if isinstance(workers, int) else int(workers)
-        except ValueError:
-            logging.error(
-                f"Invalid value supplied for workers: {workers}, must be integer."
-            )
-            exit(-1)
-
-        try:
-            port = port if isinstance(port, int) else int(port)
-        except ValueError:
-            logging.error(
-                f"Invalid value supplied for port: {port}, must be integer.")
-            exit(-1)
+        workers = _validate_param_as_int(workers, "workers")
+        port = _validate_param_as_int(port, "port")
 
         # first compile the simulator
         binary_filename = build_binary(
@@ -392,21 +394,9 @@ class SlurmMasterSlaveSimcommsysExecutor(
         port: int | str,
         update_port_if_in_use: bool = False,
         workers: int | str,
-    ):
-        try:
-            workers = workers if isinstance(workers, int) else int(workers)
-        except ValueError:
-            logging.error(
-                f"Invalid value supplied for workers: {workers}, must be integer."
-            )
-            exit(-1)
-
-        try:
-            port = port if isinstance(port, int) else int(port)
-        except ValueError:
-            logging.error(
-                f"Invalid value supplied for port: {port}, must be integer.")
-            exit(-1)
+    ):  # type: ignore
+        workers = _validate_param_as_int(workers, "workers")
+        port = _validate_param_as_int(port, "port")
 
         index = 0
         for job in jobs:
