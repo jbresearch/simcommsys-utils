@@ -24,13 +24,12 @@ import logging
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, AfterValidator
 
+from simcommsys_utils.build import SimcommsysBuildConfig, SimcommsysBuildSettings
 from simcommsys_utils.executors import (
     SimcommsysExecutorType,
     SimcommsysJob,
     SimcommsysExecutor,
-    SimcommsysBuildConfig,
 )
-from simcommsys_utils.executors import SimcommsysBuildSettings
 
 
 def _is_valid_rgx(rgx: str | None):

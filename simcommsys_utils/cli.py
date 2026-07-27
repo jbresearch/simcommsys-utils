@@ -34,9 +34,9 @@ try:
 except ImportError:
     from yaml import Loader  # type:ignore
 
+from simcommsys_utils.build import SimcommsysBuildConfig
 from simcommsys_utils.run_jobs import RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
-from simcommsys_utils.executors import SimcommsysBuildConfig
 
 app = typer.Typer()
 
