@@ -279,9 +279,6 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
             cmd += f"{simcommsys_cmd} -e local"
-            # update the job with the compiled executable details
-            job.build_version = build_version
-            job.build_variant = build_variant
             # add this job
             job_commands.append((cmd, job))
 
