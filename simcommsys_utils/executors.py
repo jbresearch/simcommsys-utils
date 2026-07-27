@@ -240,9 +240,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         job_commands = []
         for job in jobs:
             # build command to submit to shell.
-            simcommsys_cmd = self._get_simcommsys_cmd(
-                binary_filename, job
-            )
+            simcommsys_cmd = self._get_simcommsys_cmd(binary_filename, job)
             cmd = ""
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
