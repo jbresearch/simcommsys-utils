@@ -955,16 +955,7 @@ def run_jobs(
     for groupname, jobsspec in config.jobs.items():
         if groupname in selected_groups:
             build_settings = SimcommsysBuildSettings(
-                working_dir=jobsspec.working_dir,
-                install_dir=jobsspec.install_dir,
-                simcommsys_repo=jobsspec.simcommsys_repo,
-                simcommsys_branch=jobsspec.simcommsys_branch,
-                build_config=jobsspec.build_config,
-                build_arch=jobsspec.build_arch,
-                build_use_omp=jobsspec.build_use_omp,
-                build_use_mpi=jobsspec.build_use_mpi,
-                build_use_gmp=jobsspec.build_use_gmp,
-                build_use_cuda=jobsspec.build_use_cuda,
+                **jobsspec.build_settings.model_dump()
             )
             executor.run(
                 jobs=jobsspec.jobs,

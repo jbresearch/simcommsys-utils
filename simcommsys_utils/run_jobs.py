@@ -48,6 +48,52 @@ def _is_valid_rgx(rgx: str | None):
     return rgx
 
 
+class BuildSettingsSpec(BaseModel):
+    """
+    Specification for Simcommsys build settings
+    """
+    # Working directory where Simcommsys will be cloned and built.
+    # Normally this will be either an ignored subfolder of your project repo, or
+    # somewhere in your home directory, common to all projects using Simcommsys.
+    # Must be specified.
+    working_dir: Path
+    # The directory where Simcommsys binaries will be installed.
+    # Normally this will be either a temporary folder (i.e. under /tmp) or
+    # somewhere on the computational node's local storage.
+    # Must be specified, and must be in your path.
+    install_dir: Path
+    # The source URL for Simcommsys.
+    # Defaults to the official public repository, but can be set manually to the
+    # development repo or a personal fork.
+    simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git"
+    # The branch (or commit reference) to be checked out.
+    # Defaults to master, but can be set to another branch, tag, or hash of a
+    # specific commit.
+    simcommsys_branch: str = "master"
+    # Simcommsys build configuration (release | debug | profile).
+    # Used to specify which configuration of the simulator libraries and binary
+    # need to be built and used.
+    # Defaults to release.
+    build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE
+    # Simcommsys build architecture.
+    # Used to specify which architecture to optimise for when building the
+    # simulator libraries and binary.
+    # Defaults to native (i.e. the architecture of the node in use).
+    build_arch: str = "native"
+    # Allow use of OpenMP features in Simcommsys.
+    # Defaults to True.
+    build_use_omp: bool = True
+    # Allow use of OpenMPI features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_mpi: bool = True
+    # Allow use of GnuMP features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_gmp: bool = True
+    # Allow use of CUDA features in Simcommsys (if available).
+    # Defaults to True.
+    build_use_cuda: bool = True
+
+
 class JobBatchSpec(BaseModel):
     """
     Specification for a batch of jobs
@@ -116,49 +162,8 @@ class JobBatchSpec(BaseModel):
     # Value of the --floor-min Simcommsys parameter that each simulation in the group is invoked with.
     # Must be specified.
     floor_min: float
-
-    # Simcommsys build parameters.
-
-    # Working directory where Simcommsys will be cloned and built.
-    # Normally this will be either an ignored subfolder of your project repo, or
-    # somewhere in your home directory, common to all projects using Simcommsys.
-    # Must be specified.
-    working_dir: Path
-    # The directory where Simcommsys binaries will be installed.
-    # Normally this will be either a temporary folder (i.e. under /tmp) or
-    # somewhere on the computational node's local storage.
-    # Must be specified, and must be in your path.
-    install_dir: Path
-    # The source URL for Simcommsys.
-    # Defaults to the official public repository, but can be set manually to the
-    # development repo or a personal fork.
-    simcommsys_repo: str = "git@github.com:jbresearch/simcommsys.git"
-    # The branch (or commit reference) to be checked out.
-    # Defaults to master, but can be set to another branch, tag, or hash of a
-    # specific commit.
-    simcommsys_branch: str = "master"
-    # Simcommsys build configuration (release | debug | profile).
-    # Used to specify which configuration of the simulator libraries and binary
-    # need to be built and used.
-    # Defaults to release.
-    build_config: SimcommsysBuildConfig = SimcommsysBuildConfig.RELEASE
-    # Simcommsys build architecture.
-    # Used to specify which architecture to optimise for when building the
-    # simulator libraries and binary.
-    # Defaults to native (i.e. the architecture of the node in use).
-    build_arch: str = "native"
-    # Allow use of OpenMP features in Simcommsys.
-    # Defaults to True.
-    build_use_omp: bool = True
-    # Allow use of OpenMPI features in Simcommsys (if available).
-    # Defaults to True.
-    build_use_mpi: bool = True
-    # Allow use of GnuMP features in Simcommsys (if available).
-    # Defaults to True.
-    build_use_gmp: bool = True
-    # Allow use of CUDA features in Simcommsys (if available).
-    # Defaults to True.
-    build_use_cuda: bool = True
+    # Simcommsys build settings
+    build_settings: BuildSettingsSpec
 
     executor_kwargs: dict[str, Any] = {}
 
@@ -306,16 +311,18 @@ class JobBatchSpec(BaseModel):
             )
 
         # first expand any user homedir
-        self.working_dir = self.working_dir.expanduser()
+        self.build_settings.working_dir = self.build_settings.working_dir.expanduser()
         # make working_dir absolute if it is not
-        if not self.working_dir.is_absolute():
-            self.working_dir = (self.base_dir / self.working_dir).resolve()
+        if not self.build_settings.working_dir.is_absolute():
+            self.build_settings.working_dir = (
+                self.base_dir / self.build_settings.working_dir).resolve()
 
         # first expand any user homedir
-        self.install_dir = self.install_dir.expanduser()
+        self.build_settings.install_dir = self.build_settings.install_dir.expanduser()
         # make install_dir absolute if it is not
-        if not self.install_dir.is_absolute():
-            self.install_dir = (self.base_dir / self.install_dir).resolve()
+        if not self.build_settings.install_dir.is_absolute():
+            self.build_settings.install_dir = (
+                self.base_dir / self.build_settings.install_dir).resolve()
 
         return self
 
