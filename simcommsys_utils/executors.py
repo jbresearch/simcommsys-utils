@@ -151,7 +151,7 @@ exec 3>&- # close original stdout
                 logging.error(f"stdout was: {e.stdout}")
                 logging.error(f"stderr was: {e.stderr}")
                 exit(-1)
-            binary_filename = Path(res.stdout).resolve()
+            binary_filename = Path(res.stdout.strip()).resolve()
             if not binary_filename.is_file():
                 logging.error("Could not identify binary from build script.")
                 logging.error(f"stdout was: {res.stdout}")
