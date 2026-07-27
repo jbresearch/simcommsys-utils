@@ -124,7 +124,8 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None = None,
     ):
         # first compile the simulator
-        binary_filename = build_binary(build_settings, "SimCommsys/SimCommsys")
+        binary_filename = build_binary(
+            build_settings, "SimCommsys/SimCommsys", self.workers)
 
         # prepare list of simulation runs to do
         job_commands = []
@@ -251,7 +252,8 @@ echo "Finished simulation of {job.name} with {workers} workers."
             exit(-1)
 
         # first compile the simulator
-        binary_filename = build_binary(build_settings, "SimCommsys/SimCommsys")
+        binary_filename = build_binary(
+            build_settings, "SimCommsys/SimCommsys", workers)
         # start simulations
         for job in jobs:
             # build command to submit to shell.
