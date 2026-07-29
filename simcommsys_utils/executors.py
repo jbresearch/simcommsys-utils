@@ -29,6 +29,8 @@ from simcommsys_utils.commands import (
     _get_build_cmd,
     _get_local_cmd,
     _get_masterslave_cmd,
+    _get_slurm_cmd,
+    _get_slurm_masterslave_cmd,
 )
 
 
@@ -315,7 +317,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 job_name=job.name,
                 job_logfile=job.logfile.with_name(
                     job.logfile.stem + '-slurm.log'),
-                wrapped_command=_get_simcommsys_cmd(binary_filename, job),
+                wrapped_command=_get_slurm_cmd(build_settings, job),
                 node_index=index,
                 dry_run=dry_run,
                 partition=partition,
@@ -366,13 +368,14 @@ class SlurmMasterSlaveSimcommsysExecutor(
         index = 0
         for job in jobs:
             self._run_slurm(
-                job.name,
-                job.logfile.with_name(job.logfile.stem + '-slurm.log'),
-                _get_masterslave_cmd(
-                    binary_filename, job,
-                    port, update_port_if_in_use, workers, memlimit_gb
+                job_name=job.name,
+                job_logfile=job.logfile.with_name(
+                    job.logfile.stem + '-slurm.log'),
+                wrapped_command=_get_slurm_masterslave_cmd(
+                    build_settings, job,
+                    port, update_port_if_in_use, workers
                 ),
-                index,
+                node_index=index,
                 dry_run=dry_run,
                 partition=partition,
                 gres=gres,

@@ -201,3 +201,42 @@ wait $SERVER_PID
 echo "Finished simulation of {job.name} with {workers} workers."
 """
     return cmd
+
+
+def _get_slurm_cmd(
+    build_settings: SimcommsysBuildSettings,
+    job: SimcommsysJob,
+) -> str:
+    """
+    Returns commands for a single simulation run in SLURM mode.
+
+    Note: this command first builds simcommsys, then runs the simulation.
+    """
+
+    # build command to submit to SLURM.
+    cmd = f"""
+{_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)}
+{_get_simcommsys_cmd("$BINARY_FILENAME", job)}
+"""
+    return cmd
+
+
+def _get_slurm_masterslave_cmd(
+    build_settings: SimcommsysBuildSettings,
+    job: SimcommsysJob,
+    port: int,
+    update_port_if_in_use: bool,
+    workers: int,
+) -> str:
+    """
+    Returns commands for a single simulation run in SLURM master-slave mode.
+
+    Note: this command first builds simcommsys, then runs the simulation.
+    """
+
+    # build command to submit to SLURM.
+    cmd = f"""
+{_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)}
+{_get_masterslave_cmd("$BINARY_FILENAME", job, port, update_port_if_in_use, workers, None)}
+"""
+    return cmd
