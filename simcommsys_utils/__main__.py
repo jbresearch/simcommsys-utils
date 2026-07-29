@@ -20,7 +20,7 @@ import logging
 import sys
 
 logging.basicConfig(
-    format="%(levelname)s %(asctime)s: %(message)s",
+    format='[%(asctime)s] %(levelname)s: %(message)s',
     encoding="utf-8",
     level=logging.INFO,
     stream=sys.stderr,
