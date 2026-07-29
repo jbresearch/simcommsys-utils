@@ -19,12 +19,11 @@ import logging
 from multiprocessing import cpu_count
 import os
 from pathlib import Path
-from typing import Annotated, Literal, cast, List
+from typing import Annotated, List
 import re
 import sys
 from enum import Enum
 import json
-import shutil
 
 import typer
 from yaml import load
@@ -35,7 +34,7 @@ try:
 except ImportError:
     from yaml import Loader  # type:ignore
 
-from simcommsys_utils.build import SimcommsysBuildConfig, build_binary
+from simcommsys_utils.build import build_binary
 from simcommsys_utils.run_jobs import BuildSettingsSpec, RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
 

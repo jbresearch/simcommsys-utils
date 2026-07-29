@@ -25,7 +25,7 @@ from multiprocessing import cpu_count
 from enum import Enum
 from typing import Any
 
-from simcommsys_utils.build import SimcommsysBuildConfig, SimcommsysBuildSettings, build_binary
+from simcommsys_utils.build import SimcommsysBuildSettings, build_binary
 from simcommsys_utils.commands import (
     _get_masterslave_cmd,
     _get_simcommsys_cmd,
