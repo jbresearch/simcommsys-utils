@@ -236,23 +236,21 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 
         # build sbatch command for this job
         nodename = nodelist[node_index] if nodelist else None
-        sbatch_opts = f"--mail-user={self.email} \
-                        --job-name={job_name} \
-                        --partition={partition} \
-                        --ntasks=1 \
-                        --cpus-per-task={cpus_per_task} \
-                        --mem-per-cpu={memlimit_gb}G \
-                        --time={timeout_mins} \
-                        --output={job_logfile} \
-                        --error={job_logfile} \
-                        --account={self.account} \
-                        --mail-type=all"
-
-        if gres:
-            sbatch_opts += f" --gres={gres}"
-        if nodename:
-            sbatch_opts += f" --nodelist={nodename}"
-        cmd = f"sbatch {sbatch_opts} --wrap='{wrapped_command}'"
+        cmd = str("sbatch "
+                  f"--job-name={job_name} "
+                  f"--partition={partition} "
+                  f"--account={self.account} "
+                  f"--nodelist={nodename} " if nodename else ""
+                  f"--output={job_logfile} "
+                  f"--error={job_logfile} "
+                  f"--mail-user={self.email} "
+                  f"--mail-type=all "
+                  f"--ntasks=1 "
+                  f"--cpus-per-task={cpus_per_task} "
+                  f"--mem-per-cpu={memlimit_gb}G "
+                  f"--gres={gres} " if gres else ""
+                  f"--time={timeout_mins} "
+                  f"--wrap='{wrapped_command}'")
 
         if dry_run:
             print(cmd)
