@@ -71,7 +71,7 @@ def _run_build_cmd(
     build_target: str,
     workers: int
 ) -> Path:
-    build_cmd = f"""
+    cmd = f"""
 exec 3>&1 # save original stdout
 exec 1>&2 # redirect stdout to stderr for logging
 # do the actual build
@@ -80,8 +80,9 @@ exec 1>&2 # redirect stdout to stderr for logging
 echo "$BINARY_FILENAME" >&3
 exec 3>&- # close original stdout
 """
+    logging.debug(f"BUILD: {cmd}")
     try:
-        res = subprocess.run(_safe_wrap(build_cmd),
+        res = subprocess.run(_safe_wrap(cmd),
                              shell=True, executable="/bin/bash", check=True,
                              capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
