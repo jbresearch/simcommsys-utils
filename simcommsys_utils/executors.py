@@ -100,6 +100,17 @@ class SimcommsysExecutor(abc.ABC):
         raise NotImplementedError
 
 
+def _run_subprocess_safely(cmd: str) -> subprocess.CompletedProcess:
+    wrapped_cmd = f"""
+#!/bin/bash
+set -euo pipefail
+{cmd}
+"""
+    return subprocess.run(wrapped_cmd,
+                          shell=True, check=True, capture_output=True,
+                          text=True, executable="/bin/bash")
+
+
 def _run_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
@@ -107,9 +118,7 @@ def _run_build_cmd(
 ) -> Path:
     build_cmd = _get_build_cmd(build_settings, build_target, workers)
     try:
-        res = subprocess.run(build_cmd,
-                             shell=True, check=True, capture_output=True,
-                             text=True, executable="/bin/bash")
+        res = _run_subprocess_safely(build_cmd)
     except subprocess.CalledProcessError as e:
         logging.error("Build script failed with a non-zero exit code.")
         logging.error(f"stdout was: {e.stdout}")
