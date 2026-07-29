@@ -58,7 +58,6 @@ class SimcommsysJob:
     relative_error: float
     floor_min: float
     output_format: SimcommsysOutputFormat
-    endpoint: str | None = None  # defaults to local computation if not specified
 
 
 class SimcommsysExecutor(abc.ABC):
@@ -66,6 +65,7 @@ class SimcommsysExecutor(abc.ABC):
         self,
         binary_filename: Path,
         job: SimcommsysJob,
+        endpoint: str = None,
     ):
         """
         Returns simcommsys command for a single simulation.
@@ -79,7 +79,7 @@ class SimcommsysExecutor(abc.ABC):
                              f" --relative-error {job.relative_error}"
                              f" --floor-min {job.floor_min}"
                              f" -f {job.output_format.value}"
-                             f" -e {job.endpoint}" if job.endpoint is not None else ""
+                             f" -e {endpoint}" if endpoint is not None else ""
                              f" -q")
 
         return simcommsys_cmd
@@ -183,8 +183,8 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
-        job.endpoint = ':$port'
-        simcommsys_cmd = self._get_simcommsys_cmd(binary_filename, job)
+        simcommsys_cmd = self._get_simcommsys_cmd(
+            binary_filename, job, ':$port')
         # logfile where output from workers will be stored.
         worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
         ulimit_cmd = ""
