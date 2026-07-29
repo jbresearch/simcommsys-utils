@@ -29,6 +29,7 @@ from simcommsys_utils.executors import (
     SimcommsysExecutorType,
     SimcommsysJob,
     SimcommsysExecutor,
+    SimcommsysOutputFormat,
 )
 
 
@@ -168,6 +169,9 @@ class JobBatchSpec(BaseModel):
     # Value of the --floor-min Simcommsys parameter that each simulation in the group is invoked with.
     # Must be specified.
     floor_min: float
+    # Value of the --output-format Simcommsys parameter that each simulation in the group is invoked with.
+    # Defaults to 'json'
+    output_format: SimcommsysOutputFormat = SimcommsysOutputFormat.JSON
     # Simcommsys build settings
     build_settings_spec: BuildSettingsSpec = Field(alias="build_settings")
 
@@ -213,6 +217,7 @@ class JobBatchSpec(BaseModel):
                     confidence=self.confidence,
                     relative_error=self.relative_error,
                     floor_min=self.floor_min,
+                    output_format=self.output_format,
                 )
                 for jobfile in input_files
             ]
@@ -232,6 +237,7 @@ class JobBatchSpec(BaseModel):
                         confidence=self.confidence,
                         relative_error=self.relative_error,
                         floor_min=self.floor_min,
+                        output_format=self.output_format,
                     ))
             return jobs
 

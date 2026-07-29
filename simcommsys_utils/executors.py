@@ -42,6 +42,11 @@ def _validate_param_as_int(value: Any, param_name: str) -> int:
         exit(-1)
 
 
+class SimcommsysOutputFormat(str, Enum):
+    TEXT = "text"
+    JSON = "json"
+
+
 @dataclass
 class SimcommsysJob:
     name: str
@@ -52,6 +57,7 @@ class SimcommsysJob:
     confidence: float
     relative_error: float
     floor_min: float
+    output_format: SimcommsysOutputFormat
 
 
 class SimcommsysExecutor(abc.ABC):
@@ -65,19 +71,18 @@ class SimcommsysExecutor(abc.ABC):
 
         NOTE that the -e flag is not given and must be provided by a subclass
         """
-        param_ranges = ""
-        for prange in job.param_ranges:
-            param_ranges += f"--param-range {prange}"
 
-        return f"{binary_filename} \
-                    -i {job.inputfile} \
-                    -o {job.outputfile} \
-                    {param_ranges} \
-                    --confidence {job.confidence} \
-                    --relative-error {job.relative_error} \
-                    --floor-min {job.floor_min} \
-                    -f json \
-                    -q"
+        simcommsys_cmd = str(f"{binary_filename}"
+                             f" -i {job.inputfile}"
+                             f" -o {job.outputfile}"
+                             "".join(f" -r {pr}" for pr in job.param_ranges) +
+                             f" --confidence {job.confidence}"
+                             f" --relative-error {job.relative_error}"
+                             f" --floor-min {job.floor_min}"
+                             f" -f {job.output_format.value}"
+                             f" -q")
+
+        return simcommsys_cmd
 
     @abc.abstractmethod
     def run(
