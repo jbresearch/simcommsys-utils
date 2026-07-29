@@ -58,6 +58,7 @@ class SimcommsysJob:
     relative_error: float
     floor_min: float
     output_format: SimcommsysOutputFormat
+    endpoint: str | None = None  # defaults to local computation if not specified
 
 
 class SimcommsysExecutor(abc.ABC):
@@ -68,8 +69,6 @@ class SimcommsysExecutor(abc.ABC):
     ):
         """
         Returns simcommsys command for a single simulation.
-
-        NOTE that the -e flag is not given and must be provided by a subclass
         """
 
         simcommsys_cmd = str(f"{binary_filename}"
@@ -80,6 +79,7 @@ class SimcommsysExecutor(abc.ABC):
                              f" --relative-error {job.relative_error}"
                              f" --floor-min {job.floor_min}"
                              f" -f {job.output_format.value}"
+                             f" -e {job.endpoint}" if job.endpoint is not None else ""
                              f" -q")
 
         return simcommsys_cmd
@@ -155,7 +155,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             cmd = ""
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
-            cmd += f"{simcommsys_cmd} -e local"
+            cmd += simcommsys_cmd
             # add this job
             job_commands.append((cmd, job))
 
@@ -183,6 +183,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
+        job.endpoint = ':$port'
         simcommsys_cmd = self._get_simcommsys_cmd(binary_filename, job)
         # logfile where output from workers will be stored.
         worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
@@ -204,7 +205,7 @@ port={port}
 while true; do
     echo "Attempting to use port $port"
     # Launch the server in the background
-    {simcommsys_cmd} -e :$port 1>"{job.logfile}" 2>&1 &
+    {simcommsys_cmd} 1>"{job.logfile}" 2>&1 &
     SERVER_PID=$!
     # Wait a moment for the server to attempt to bind to the port
     sleep 1
@@ -349,9 +350,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 job_name=job.name,
                 job_logfile=job.logfile.with_name(
                     job.logfile.stem + '-slurm.log'),
-                wrapped_command=self._get_simcommsys_cmd(
-                    build_version, build_variant, build_config, job
-                )
+                wrapped_command=self._get_simcommsys_cmd(binary_filename, job)
                 + " -e local",
                 node_index=index,
                 dry_run=dry_run,
