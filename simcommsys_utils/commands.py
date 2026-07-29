@@ -20,11 +20,18 @@ from pathlib import Path
 from simcommsys_utils.executors import SimcommsysBuildSettings, SimcommsysJob
 
 
+# internal helper methods
+
+
 def _get_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
     workers: int,
-):
+) -> str:
+    """
+    Return commands to build simcommsys binaries in a parallel-safe way.
+    """
+
     # determine build arguments
     build_args = []
     build_args.append(f"-j{workers}")
@@ -76,7 +83,7 @@ exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
     return cmd
 
 
-def _get_ulimit_cmd(memlimit_gb):
+def _get_ulimit_cmd(memlimit_gb: int | None) -> str:
     if memlimit_gb is None:
         return ""
     return f"ulimit -v {memlimit_gb * 1024 * 1024}"
@@ -91,18 +98,21 @@ def _get_simcommsys_cmd(
     Returns simcommsys command for a single simulation.
     """
 
-    simcommsys_cmd = str(f"{binary_filename}"
-                         f" -i {job.inputfile}"
-                         f" -o {job.outputfile}"
-                         "".join(f" -r {pr}" for pr in job.param_ranges) +
-                         f" --confidence {job.confidence}"
-                         f" --relative-error {job.relative_error}"
-                         f" --floor-min {job.floor_min}"
-                         f" -f {job.output_format.value}"
-                         f" -e {endpoint}" if endpoint is not None else ""
-                         f" -q")
+    cmd = str(f"{binary_filename}"
+              f" -i {job.inputfile}"
+              f" -o {job.outputfile}"
+              "".join(f" -r {pr}" for pr in job.param_ranges) +
+              f" --confidence {job.confidence}"
+              f" --relative-error {job.relative_error}"
+              f" --floor-min {job.floor_min}"
+              f" -f {job.output_format.value}"
+              f" -e {endpoint}" if endpoint is not None else ""
+              f" -q")
 
-    return simcommsys_cmd
+    return cmd
+
+
+# main methods used by clients
 
 
 def _get_masterslave_cmd(
@@ -113,6 +123,10 @@ def _get_masterslave_cmd(
     workers: int,
     memlimit_gb: int | None,
 ) -> str:
+    """
+    Returns commands for a single simulation run in master-slave mode.
+    """
+
     # build command to submit to shell.
     ulimit_cmd = _get_ulimit_cmd(memlimit_gb)
     simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job, ':$port')
