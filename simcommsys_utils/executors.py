@@ -82,8 +82,8 @@ exec 3>&- # close original stdout
 """
     try:
         res = subprocess.run(_safe_wrap(build_cmd),
-                             shell=True, check=True, capture_output=True,
-                             text=True, executable="/bin/bash")
+                             shell=True, executable="/bin/bash", check=True,
+                             capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         logging.error("Build script failed with a non-zero exit code.")
         logging.error(f"stdout was: {e.stdout}")
@@ -112,7 +112,7 @@ def _run_local_cmd(cmd: str, job: SimcommsysJob):
         print(f"Starting local simulation of {job.name}.")
         with open(job.logfile, "a") as fid:
             subprocess.run(_safe_wrap(cmd),
-                           shell=True, check=True,
+                           shell=True, executable="/bin/bash", check=True,
                            stdout=fid, stderr=subprocess.STDOUT)
         print(f"Finished local simulation of {job.name}.")
     except subprocess.CalledProcessError as e:
@@ -199,7 +199,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
             else:
                 logging.debug(f"RUN: {cmd}")
                 subprocess.run(_safe_wrap(cmd),
-                               shell=True, check=True)
+                               shell=True, executable="/bin/bash", check=True)
 
 
 class SlurmSimcommsysExecutor(SimcommsysExecutor):
@@ -251,7 +251,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         else:
             logging.debug(f"RUN: {cmd}")
             subprocess.run(_safe_wrap(cmd),
-                           shell=True, check=self.cancel_on_failure)
+                           shell=True, executable="/bin/bash",
+                           check=self.cancel_on_failure)
 
     def run(  # type:ignore
         self,
