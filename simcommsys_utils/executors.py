@@ -164,7 +164,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
             job_commands.append((cmd, job))
 
         if dry_run:
-            for cmd in job_commands:
+            for cmd, job in job_commands:
                 print(cmd)
         elif self.workers == 1 or len(job_commands) == 1:
             # There is no point in using multiprocessing as there is only one command or one worker.
