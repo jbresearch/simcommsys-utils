@@ -24,12 +24,16 @@ import logging
 from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, AfterValidator
 
 from simcommsys_utils.executors import (
+    SimcommsysExecutorType,
+    SimcommsysExecutor,
+)
+
+
+from simcommsys_utils.models import (
     SimcommsysBuildConfig,
     SimcommsysBuildSettings,
-    SimcommsysExecutorType,
-    SimcommsysJob,
-    SimcommsysExecutor,
     SimcommsysOutputFormat,
+    SimcommsysJob
 )
 
 

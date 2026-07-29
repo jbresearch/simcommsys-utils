@@ -18,7 +18,6 @@
 import abc
 from pathlib import Path
 import subprocess
-from dataclasses import dataclass
 import logging
 import multiprocessing
 from multiprocessing import cpu_count
@@ -32,6 +31,10 @@ from simcommsys_utils.commands import (
     _get_slurm_cmd,
     _get_slurm_masterslave_cmd,
 )
+from simcommsys_utils.models import (
+    SimcommsysBuildSettings,
+    SimcommsysJob,
+)
 
 
 def _validate_param_as_int(value: Any, param_name: str) -> int:
@@ -42,48 +45,9 @@ def _validate_param_as_int(value: Any, param_name: str) -> int:
     try:
         return value if isinstance(value, int) else int(value)
     except (ValueError, TypeError):
-        logging.error(
-            f"Invalid value supplied for {param_name}: {value}, must be an integer."
-        )
+        logging.error(f"Invalid value supplied for {param_name}: "
+                      f"{value}, must be an integer.")
         exit(-1)
-
-
-class SimcommsysBuildConfig(str, Enum):
-    DEBUG = "debug"
-    RELEASE = "release"
-    PROFILE = "profile"
-
-
-@dataclass
-class SimcommsysBuildSettings:
-    working_dir: Path
-    install_dir: Path
-    simcommsys_repo: str
-    simcommsys_branch: str
-    build_config: SimcommsysBuildConfig
-    build_arch: str
-    build_use_omp: bool
-    build_use_mpi: bool
-    build_use_gmp: bool
-    build_use_cuda: bool
-
-
-class SimcommsysOutputFormat(str, Enum):
-    TEXT = "text"
-    JSON = "json"
-
-
-@dataclass
-class SimcommsysJob:
-    name: str
-    inputfile: Path
-    outputfile: Path
-    logfile: Path
-    param_ranges: list[str]
-    confidence: float
-    relative_error: float
-    floor_min: float
-    output_format: SimcommsysOutputFormat
 
 
 class SimcommsysExecutor(abc.ABC):

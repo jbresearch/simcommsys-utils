@@ -17,7 +17,7 @@
 
 from pathlib import Path
 
-from simcommsys_utils.executors import SimcommsysBuildSettings, SimcommsysJob
+from simcommsys_utils.models import SimcommsysBuildSettings, SimcommsysJob
 
 
 # internal helper methods
