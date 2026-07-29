@@ -98,15 +98,15 @@ def _get_simcommsys_cmd(
     Returns simcommsys command for a single simulation.
     """
 
-    cmd = str(f"{binary_filename}"
-              f" -i {job.inputfile}"
-              f" -o {job.outputfile}"
+    cmd = str(f"{binary_filename}" +
+              f" -i {job.inputfile}" +
+              f" -o {job.outputfile}" +
               "".join(f" -r {pr}" for pr in job.param_ranges) +
-              f" --confidence {job.confidence}"
-              f" --relative-error {job.relative_error}"
-              f" --floor-min {job.floor_min}"
-              f" -f {job.output_format.value}"
-              f" -e {endpoint}" if endpoint is not None else ""
+              f" --confidence {job.confidence}" +
+              f" --relative-error {job.relative_error}" +
+              f" --floor-min {job.floor_min}" +
+              f" -f {job.output_format.value}" +
+              (f" -e {endpoint}" if endpoint is not None else "") +
               f" -q")
 
     return cmd
