@@ -327,6 +327,7 @@ class JobBatchSpec(BaseModel):
         if not self.build_settings_spec.working_dir.is_absolute():
             self.build_settings_spec.working_dir = (
                 self.base_dir / self.build_settings_spec.working_dir).resolve()
+        # DO NOT CHECK FOR EXISTENCE HERE - happens only on build, possibly on a remote
 
         # first expand any user homedir
         self.build_settings_spec.install_dir = self.build_settings_spec.install_dir.expanduser()
@@ -334,6 +335,7 @@ class JobBatchSpec(BaseModel):
         if not self.build_settings_spec.install_dir.is_absolute():
             self.build_settings_spec.install_dir = (
                 self.base_dir / self.build_settings_spec.install_dir).resolve()
+        # DO NOT CHECK FOR EXISTENCE HERE - happens only on build, possibly on a remote
 
         return self
 
