@@ -100,7 +100,7 @@ class SimcommsysExecutor(abc.ABC):
         raise NotImplementedError
 
 
-def _build_binary(
+def _run_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
     workers: int
@@ -170,7 +170,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None = None,
     ):
         # first compile the simulator
-        binary_filename = _build_binary(
+        binary_filename = _run_build_cmd(
             build_settings, "SimCommsys/SimCommsys", self.workers)
 
         # prepare list of simulation runs to do
@@ -212,7 +212,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         port = _validate_param_as_int(port, "port")
 
         # first compile the simulator
-        binary_filename = _build_binary(
+        binary_filename = _run_build_cmd(
             build_settings, "SimCommsys/SimCommsys", workers)
         # start simulations
         for job in jobs:

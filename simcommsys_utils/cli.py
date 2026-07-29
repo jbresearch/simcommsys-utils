@@ -34,6 +34,7 @@ try:
 except ImportError:
     from yaml import Loader  # type:ignore
 
+from simcommsys_utils.executors import _run_build_cmd
 from simcommsys_utils.run_jobs import BuildSettingsSpec, RunJobsSpec
 from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
 
@@ -129,7 +130,7 @@ def make_simulators(
         exit(-1)
 
     # first compile the getsystemparams tool
-    binary_filename = _build_binary(
+    binary_filename = _run_build_cmd(
         config.build_settings, "SimCommsys/GetSystemParams", cpu_count())
 
     if not input_dir.is_dir():
@@ -350,7 +351,7 @@ def make_timers(
         exit(-1)
 
     # first compile the getsystemparams tool
-    binary_filename = _build_binary(
+    binary_filename = _run_build_cmd(
         config.build_settings, "SimCommsys/GetSystemParams", cpu_count())
 
     if not input_dir.is_dir():
