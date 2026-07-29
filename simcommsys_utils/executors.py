@@ -27,9 +27,8 @@ from typing import Any
 
 from simcommsys_utils.commands import (
     _get_build_cmd,
+    _get_local_cmd,
     _get_masterslave_cmd,
-    _get_simcommsys_cmd,
-    _get_ulimit_cmd,
 )
 
 
@@ -194,9 +193,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         job_commands = []
         for job in jobs:
             # build command to submit to shell.
-            ulimit_cmd = _get_ulimit_cmd(memlimit_gb)
-            simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job)
-            cmd = f"{ulimit_cmd}; {simcommsys_cmd}"
+            cmd = _get_local_cmd(binary_filename, job, memlimit_gb)
             # add this job
             job_commands.append((cmd, job))
 

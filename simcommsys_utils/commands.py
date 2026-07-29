@@ -115,6 +115,23 @@ def _get_simcommsys_cmd(
 # main methods used by clients
 
 
+def _get_local_cmd(
+    binary_filename: Path,
+    job: SimcommsysJob,
+    memlimit_gb: int,
+) -> str:
+    """
+    Returns commands for a single simulation run in local mode.
+    """
+
+    # build command to submit to shell.
+    cmd = f"""
+{_get_ulimit_cmd(memlimit_gb)}
+{_get_simcommsys_cmd(binary_filename, job)}
+"""
+    return cmd
+
+
 def _get_masterslave_cmd(
     binary_filename: Path,
     job: SimcommsysJob,
