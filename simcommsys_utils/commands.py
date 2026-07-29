@@ -144,27 +144,24 @@ def _get_masterslave_cmd(
     Returns commands for a single simulation run in master-slave mode.
     """
 
-    # build command to submit to shell.
-    ulimit_cmd = _get_ulimit_cmd(memlimit_gb)
-    simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job, ':$port')
     # logfile where output from workers will be stored.
     worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
-    # the command:
+    # build command to submit to shell.
     # 1. sets a memory limit using ulimit -v.
     # 2. starts the simcommsys master in a screen session
     # 3. starts the simcommsys slaves in the background, with stderr and stdout suppressed.
     # 4. Registers a handler for Ctrl+C that can kill the simcommsys server screen session
     # 5. Waits for the simcommsys server screen session to terminate or for the user to press Ctrl+C
-    cmd = f"""set -e
+    cmd = f"""
 echo "Starting simulation of {job.name} with {workers} workers."
 
-{ulimit_cmd}
+{_get_ulimit_cmd(memlimit_gb)}
 
 port={port}
 while true; do
     echo "Attempting to use port $port"
     # Launch the server in the background
-    {simcommsys_cmd} 1>"{job.logfile}" 2>&1 &
+    {_get_simcommsys_cmd(binary_filename, job, ':$port')} 1>"{job.logfile}" 2>&1 &
     SERVER_PID=$!
     # Wait a moment for the server to attempt to bind to the port
     sleep 1
