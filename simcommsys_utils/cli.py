@@ -41,6 +41,31 @@ from simcommsys_utils.pchk import PchkMatrix, PchkMatrixFormat, ValuesMethod
 app = typer.Typer()
 
 
+@app.callback()
+def main(
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "-d",
+            "--debug",
+            help="Enable debug logging.",
+            is_eager=True,
+        ),
+    ] = False,
+):
+    """
+    Simcommsys Utilities: A tool for building and running Simcommsys simulations.
+    """
+    level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(
+        format='[%(asctime)s] %(levelname)s: %(message)s',
+        encoding="utf-8",
+        level=level,
+        stream=sys.stderr,
+        force=True,
+    )
+
+
 class InputMode(Enum):
     """
     Specifies how a Simcommsys simulator should generate input data for the communication system.

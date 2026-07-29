@@ -18,12 +18,4 @@
 from .cli import app
 import logging
 import sys
-
-logging.basicConfig(
-    format='[%(asctime)s] %(levelname)s: %(message)s',
-    encoding="utf-8",
-    level=logging.INFO,
-    stream=sys.stderr,
-)
-
 app()
