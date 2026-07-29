@@ -60,6 +60,12 @@ class SimcommsysJob:
     output_format: SimcommsysOutputFormat
 
 
+def _get_ulimit_cmd(memlimit_gb):
+    if memlimit_gb is None:
+        return ""
+    return f"ulimit -v {memlimit_gb * 1024 * 1024}"
+
+
 def _get_simcommsys_cmd(
     binary_filename: Path,
     job: SimcommsysJob,
@@ -151,11 +157,9 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         job_commands = []
         for job in jobs:
             # build command to submit to shell.
+            ulimit_cmd = _get_ulimit_cmd(memlimit_gb)
             simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job)
-            cmd = ""
-            if memlimit_gb is not None:
-                cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
-            cmd += simcommsys_cmd
+            cmd = f"{ulimit_cmd}; {simcommsys_cmd}"
             # add this job
             job_commands.append((cmd, job))
 
@@ -183,12 +187,10 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
+        ulimit_cmd = _get_ulimit_cmd(memlimit_gb)
         simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job, ':$port')
         # logfile where output from workers will be stored.
         worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
-        ulimit_cmd = ""
-        if memlimit_gb is not None:
-            ulimit_cmd = f"ulimit -v {memlimit_gb * 1024 * 1024}"
         # the command:
         # 1. sets a memory limit using ulimit -v.
         # 2. starts the simcommsys master in a screen session
