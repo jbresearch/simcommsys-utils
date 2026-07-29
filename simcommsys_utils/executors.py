@@ -25,8 +25,8 @@ from multiprocessing import cpu_count
 from enum import Enum
 from typing import Any
 
-from simcommsys_utils.build import SimcommsysBuildSettings, build_binary
 from simcommsys_utils.commands import (
+    _get_build_cmd,
     _get_masterslave_cmd,
     _get_simcommsys_cmd,
     _get_ulimit_cmd,
@@ -45,6 +45,26 @@ def _validate_param_as_int(value: Any, param_name: str) -> int:
             f"Invalid value supplied for {param_name}: {value}, must be an integer."
         )
         exit(-1)
+
+
+class SimcommsysBuildConfig(str, Enum):
+    DEBUG = "debug"
+    RELEASE = "release"
+    PROFILE = "profile"
+
+
+@dataclass
+class SimcommsysBuildSettings:
+    working_dir: Path
+    install_dir: Path
+    simcommsys_repo: str
+    simcommsys_branch: str
+    build_config: SimcommsysBuildConfig
+    build_arch: str
+    build_use_omp: bool
+    build_use_mpi: bool
+    build_use_gmp: bool
+    build_use_cuda: bool
 
 
 class SimcommsysOutputFormat(str, Enum):
@@ -78,6 +98,30 @@ class SimcommsysExecutor(abc.ABC):
         Runs several simcommsys simulations.
         """
         raise NotImplementedError
+
+
+def _build_binary(
+    build_settings: SimcommsysBuildSettings,
+    build_target: str,
+    workers: int
+) -> Path:
+    build_cmd = _get_build_cmd(build_settings, build_target, workers)
+    try:
+        res = subprocess.run(build_cmd,
+                             shell=True, check=True, capture_output=True,
+                             text=True, executable="/bin/bash")
+    except subprocess.CalledProcessError as e:
+        logging.error("Build script failed with a non-zero exit code.")
+        logging.error(f"stdout was: {e.stdout}")
+        logging.error(f"stderr was: {e.stderr}")
+        exit(-1)
+    binary_filename = Path(res.stdout.strip()).resolve()
+    if not binary_filename.is_file():
+        logging.error("Could not identify binary from build script.")
+        logging.error(f"stdout was: {res.stdout}")
+        logging.error(f"stderr was: {res.stderr}")
+        exit(-1)
+    return binary_filename
 
 
 def _run_local_cmd_wrapper(job_command: tuple[str, SimcommsysJob]):
@@ -126,7 +170,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None = None,
     ):
         # first compile the simulator
-        binary_filename = build_binary(
+        binary_filename = _build_binary(
             build_settings, "SimCommsys/SimCommsys", self.workers)
 
         # prepare list of simulation runs to do
@@ -168,7 +212,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         port = _validate_param_as_int(port, "port")
 
         # first compile the simulator
-        binary_filename = build_binary(
+        binary_filename = _build_binary(
             build_settings, "SimCommsys/SimCommsys", workers)
         # start simulations
         for job in jobs:
