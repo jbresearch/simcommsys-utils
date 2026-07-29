@@ -116,7 +116,15 @@ def _run_build_cmd(
     build_target: str,
     workers: int
 ) -> Path:
-    build_cmd = _get_build_cmd(build_settings, build_target, workers)
+    build_cmd = f"""
+exec 3>&1 # save original stdout
+exec 1>&2 # redirect stdout to stderr for logging
+# do the actual build
+{_get_build_cmd(build_settings, build_target, workers)}
+# print binary filename to original stdout
+echo "$BINARY_FILENAME" >&3
+exec 3>&- # close original stdout
+"""
     try:
         res = _run_subprocess_safely(build_cmd)
     except subprocess.CalledProcessError as e:

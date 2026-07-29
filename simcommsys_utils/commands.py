@@ -42,10 +42,6 @@ def _get_build_cmd(
         build_args.append("USE_CUDA=0")
     # command sequence to check out, build, and install the target
     cmd = f"""
-#!/bin/bash
-set -euo pipefail
-exec 3>&1 # save original stdout
-exec 1>&2 # redirect stdout to stderr for logging
 # Make sure work directory exists
 mkdir -p {build_settings.working_dir}
 ## CRITICAL SECTION START
@@ -76,9 +72,6 @@ echo Binary filename: $BINARY_FILENAME
 rm -f "{build_settings.working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
 flock -u "$lock_fd" # release the lock
 exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
-# print binary filename to original stdout
-echo "$BINARY_FILENAME" >&3
-exec 3>&- # close original stdout
 """
     return cmd
 
