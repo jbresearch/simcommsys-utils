@@ -60,30 +60,30 @@ class SimcommsysJob:
     output_format: SimcommsysOutputFormat
 
 
+def _get_simcommsys_cmd(
+    binary_filename: Path,
+    job: SimcommsysJob,
+    endpoint: str = None,
+):
+    """
+    Returns simcommsys command for a single simulation.
+    """
+
+    simcommsys_cmd = str(f"{binary_filename}"
+                         f" -i {job.inputfile}"
+                         f" -o {job.outputfile}"
+                         "".join(f" -r {pr}" for pr in job.param_ranges) +
+                         f" --confidence {job.confidence}"
+                         f" --relative-error {job.relative_error}"
+                         f" --floor-min {job.floor_min}"
+                         f" -f {job.output_format.value}"
+                         f" -e {endpoint}" if endpoint is not None else ""
+                         f" -q")
+
+    return simcommsys_cmd
+
+
 class SimcommsysExecutor(abc.ABC):
-    def _get_simcommsys_cmd(
-        self,
-        binary_filename: Path,
-        job: SimcommsysJob,
-        endpoint: str = None,
-    ):
-        """
-        Returns simcommsys command for a single simulation.
-        """
-
-        simcommsys_cmd = str(f"{binary_filename}"
-                             f" -i {job.inputfile}"
-                             f" -o {job.outputfile}"
-                             "".join(f" -r {pr}" for pr in job.param_ranges) +
-                             f" --confidence {job.confidence}"
-                             f" --relative-error {job.relative_error}"
-                             f" --floor-min {job.floor_min}"
-                             f" -f {job.output_format.value}"
-                             f" -e {endpoint}" if endpoint is not None else ""
-                             f" -q")
-
-        return simcommsys_cmd
-
     @abc.abstractmethod
     def run(
         self,
@@ -151,7 +151,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
         job_commands = []
         for job in jobs:
             # build command to submit to shell.
-            simcommsys_cmd = self._get_simcommsys_cmd(binary_filename, job)
+            simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job)
             cmd = ""
             if memlimit_gb is not None:
                 cmd += f"ulimit -v {memlimit_gb * 1024 * 1024} && "
@@ -183,8 +183,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         memlimit_gb: int | None,
     ) -> str:
         # build command to submit to shell.
-        simcommsys_cmd = self._get_simcommsys_cmd(
-            binary_filename, job, ':$port')
+        simcommsys_cmd = _get_simcommsys_cmd(binary_filename, job, ':$port')
         # logfile where output from workers will be stored.
         worker_logfile = job.logfile.with_name(f"{job.logfile.stem}-w$i.log")
         ulimit_cmd = ""
@@ -350,8 +349,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 job_name=job.name,
                 job_logfile=job.logfile.with_name(
                     job.logfile.stem + '-slurm.log'),
-                wrapped_command=self._get_simcommsys_cmd(binary_filename, job)
-                + " -e local",
+                wrapped_command=_get_simcommsys_cmd(binary_filename, job),
                 node_index=index,
                 dry_run=dry_run,
                 partition=partition,
