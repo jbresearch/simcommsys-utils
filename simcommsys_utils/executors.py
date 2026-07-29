@@ -165,7 +165,7 @@ class LocalSimcommsysExecutor(SimcommsysExecutor):
 
         if dry_run:
             for cmd, job in job_commands:
-                print(cmd)
+                logging.info(f"DRY RUN: {cmd}")
         elif self.workers == 1 or len(job_commands) == 1:
             # There is no point in using multiprocessing as there is only one command or one worker.
             for cmd, job in job_commands:
@@ -202,9 +202,9 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
                 port, update_port_if_in_use, workers, memlimit_gb
             )
             if dry_run:
-                print(cmd)
+                logging.info(f"DRY RUN: {cmd}")
             else:
-                logging.debug(cmd)
+                logging.debug(f"RUN: {cmd}")
                 subprocess.run(cmd, shell=True, check=True)
 
 
@@ -253,9 +253,9 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                   f"--wrap='{wrapped_command}'")
 
         if dry_run:
-            print(cmd)
+            logging.info(f"DRY RUN: {cmd}")
         else:
-            logging.debug(cmd)
+            logging.debug(f"RUN: {cmd}")
             subprocess.run(cmd, shell=True, check=self.cancel_on_failure)
 
     def run(  # type:ignore
