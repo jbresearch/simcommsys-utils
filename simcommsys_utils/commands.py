@@ -112,6 +112,17 @@ def _get_simcommsys_cmd(
     return cmd
 
 
+# helper methods used by clients
+
+
+def _safe_wrap(cmd: str) -> str:
+    wrapped_cmd = f"""
+#!/bin/bash
+set -euo pipefail
+{cmd}
+"""
+    return wrapped_cmd
+
 # main methods used by clients
 
 

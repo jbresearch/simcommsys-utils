@@ -30,6 +30,7 @@ from simcommsys_utils.commands import (
     _get_masterslave_cmd,
     _get_slurm_cmd,
     _get_slurm_masterslave_cmd,
+    _safe_wrap,
 )
 from simcommsys_utils.models import (
     SimcommsysBuildSettings,
@@ -65,17 +66,6 @@ class SimcommsysExecutor(abc.ABC):
         raise NotImplementedError
 
 
-def _run_subprocess_safely(cmd: str) -> subprocess.CompletedProcess:
-    wrapped_cmd = f"""
-#!/bin/bash
-set -euo pipefail
-{cmd}
-"""
-    return subprocess.run(wrapped_cmd,
-                          shell=True, check=True, capture_output=True,
-                          text=True, executable="/bin/bash")
-
-
 def _run_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
@@ -91,7 +81,9 @@ echo "$BINARY_FILENAME" >&3
 exec 3>&- # close original stdout
 """
     try:
-        res = _run_subprocess_safely(build_cmd)
+        res = subprocess.run(_safe_wrap(build_cmd),
+                             shell=True, check=True, capture_output=True,
+                             text=True, executable="/bin/bash")
     except subprocess.CalledProcessError as e:
         logging.error("Build script failed with a non-zero exit code.")
         logging.error(f"stdout was: {e.stdout}")
@@ -115,11 +107,12 @@ def _run_local_cmd(cmd: str, job: SimcommsysJob):
     """
     Run a command using subprocess. Command is run in a shell and we error out on failure.
     """
-    logging.debug(cmd)
+    logging.debug(f"RUN: {cmd}")
     try:
         print(f"Starting local simulation of {job.name}.")
         with open(job.logfile, "a") as fid:
-            subprocess.run(cmd, shell=True, check=True,
+            subprocess.run(_safe_wrap(cmd),
+                           shell=True, check=True,
                            stdout=fid, stderr=subprocess.STDOUT)
         print(f"Finished local simulation of {job.name}.")
     except subprocess.CalledProcessError as e:
@@ -205,7 +198,8 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
                 logging.info(f"DRY RUN: {cmd}")
             else:
                 logging.debug(f"RUN: {cmd}")
-                subprocess.run(cmd, shell=True, check=True)
+                subprocess.run(_safe_wrap(cmd),
+                               shell=True, check=True)
 
 
 class SlurmSimcommsysExecutor(SimcommsysExecutor):
@@ -256,7 +250,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
             logging.info(f"DRY RUN: {cmd}")
         else:
             logging.debug(f"RUN: {cmd}")
-            subprocess.run(cmd, shell=True, check=self.cancel_on_failure)
+            subprocess.run(_safe_wrap(cmd),
+                           shell=True, check=self.cancel_on_failure)
 
     def run(  # type:ignore
         self,
@@ -294,9 +289,8 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
                 except Exception as e:
                     # cancel all jobs in this group which have already been scheduled
                     for job in jobs:
-                        subprocess.run(
-                            f"scancel --name={job.name}", shell=True, check=False
-                        )
+                        subprocess.run(f"scancel --name={job.name}",
+                                       shell=True, check=False)
                     raise e
             else:
                 self._run_slurm(**_run_slurm_args)
