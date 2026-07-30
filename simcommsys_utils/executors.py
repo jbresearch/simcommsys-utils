@@ -278,9 +278,9 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 """
 
         if dry_run:
-            logging.info(f"DRY RUN: sbatch << {cmd}")
+            logging.info(f"DRY RUN: sbatch << {script}")
         else:
-            logging.debug(f"RUN: sbatch << {cmd}")
+            logging.debug(f"RUN: sbatch << {script}")
             subprocess.run("sbatch", input=script, text=True,
                            shell=True, check=self.cancel_on_failure)
 
