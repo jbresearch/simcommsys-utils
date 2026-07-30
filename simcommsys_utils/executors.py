@@ -237,7 +237,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         self,
         job_name: str,
         job_logfile: Path,
-        wrapped_command: str,
+        cmd: str,
         node_index: int,
         dry_run: bool = False,
         *,
@@ -274,13 +274,13 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 #SBATCH --mail-user={self.email}
 #SBATCH --mail-type=all
 
-{wrapped_command}
+{cmd}
 """
 
         if dry_run:
-            logging.info(f"DRY RUN: sbatch << {wrapped_command}")
+            logging.info(f"DRY RUN: sbatch << {cmd}")
         else:
-            logging.debug(f"RUN: sbatch << {wrapped_command}")
+            logging.debug(f"RUN: sbatch << {cmd}")
             subprocess.run("sbatch", input=script, text=True,
                            shell=True, check=self.cancel_on_failure)
 
@@ -309,7 +309,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
             _run_slurm_args = dict(
                 job_name=job.name,
                 job_logfile=job.logfile.with_name('slurm-' + job.logfile.name),
-                wrapped_command=_get_slurm_cmd(build_settings, job),
+                cmd=_get_slurm_cmd(build_settings, job),
                 node_index=index,
                 dry_run=dry_run,
                 partition=partition,
@@ -366,7 +366,7 @@ class SlurmMasterSlaveSimcommsysExecutor(
             self._run_slurm(
                 job_name=job.name,
                 job_logfile=job.logfile.with_name('slurm-' + job.logfile.name),
-                wrapped_command=_get_slurm_masterslave_cmd(
+                cmd=_get_slurm_masterslave_cmd(
                     build_settings, job,
                     port, update_port_if_in_use, workers
                 ),
