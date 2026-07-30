@@ -76,7 +76,8 @@ def _run_checkout_cmd(
     logging.debug(f"CHECKOUT: {cmd}")
     try:
         subprocess.run(_safe_wrap(cmd),
-                       shell=True, executable="/bin/bash", check=True)
+                       shell=True, executable="/bin/bash", check=True,
+                       capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         logging.error("Checkout script failed with a non-zero exit code.")
         logging.error(f"stdout was: {e.stdout}")
