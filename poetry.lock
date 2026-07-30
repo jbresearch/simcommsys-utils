@@ -7,6 +7,29 @@ optional = false
 python-versions = ">=3.10"
 
 [[package]]
+name = "black"
+version = "24.10.0"
+description = "The uncompromising code formatter."
+category = "dev"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+click = ">=8.0.0"
+mypy-extensions = ">=0.4.3"
+packaging = ">=22.0"
+pathspec = ">=0.9.0"
+platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+typing-extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
+
+[package.extras]
+colorama = ["colorama (>=0.4.3)"]
+d = ["aiohttp (>=3.10)"]
+jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
+uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
 name = "click"
 version = "8.1.8"
 description = "Composable command line interface toolkit"
@@ -135,6 +158,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "mypy-extensions"
+version = "1.1.0"
+description = "Type system extensions for programs checked with the mypy type checker."
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "numpy"
 version = "2.2.6"
 description = "Fundamental package for array computing in Python"
@@ -151,6 +182,19 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "pathspec"
+version = "1.1.1"
+description = "Utility library for gitignore style pattern matching of file paths."
+category = "dev"
+optional = false
+python-versions = ">=3.9"
+
+[package.extras]
+hyperscan = ["hyperscan (>=0.7)"]
+optional = ["typing-extensions (>=4)"]
+re2 = ["google-re2 (>=1.1)"]
+
+[[package]]
 name = "pillow"
 version = "12.3.0"
 description = "Python Imaging Library (fork)"
@@ -165,6 +209,14 @@ mic = ["olefile"]
 test-arrow = ["arro3-compute", "arro3-core", "nanoarrow", "pyarrow"]
 tests = ["coverage (>=7.4.2)", "defusedxml", "markdown2", "olefile", "packaging", "pytest", "pytest-cov", "pytest-timeout", "pytest-xdist", "setuptools", "trove-classifiers (>=2024.10.12)"]
 xmp = ["defusedxml"]
+
+[[package]]
+name = "platformdirs"
+version = "4.11.0"
+description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
+category = "dev"
+optional = false
+python-versions = ">=3.10"
 
 [[package]]
 name = "pydantic"
@@ -268,6 +320,14 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 
 [[package]]
+name = "tomli"
+version = "2.4.1"
+description = "A lil' TOML parser"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "typer"
 version = "0.12.5"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
@@ -280,6 +340,14 @@ click = ">=8.0.0"
 rich = ">=10.11.0"
 shellingham = ">=1.3.0"
 typing-extensions = ">=3.7.4.3"
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260724"
+description = "Typing stubs for PyYAML"
+category = "dev"
+optional = false
+python-versions = ">=3.10"
 
 [[package]]
 name = "typing-extensions"
@@ -303,9 +371,11 @@ typing-extensions = ">=4.12.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
+content-hash = "e3ea151c260cbfa882d50e0a8963d1245eba2dd2a8ffcf3c071808692bfa4cac"
 
 [metadata.files]
 annotated-types = []
+black = []
 click = []
 colorama = []
 contourpy = []
@@ -315,9 +385,12 @@ kiwisolver = []
 markdown-it-py = []
 matplotlib = []
 mdurl = []
+mypy-extensions = []
 numpy = []
 packaging = []
+pathspec = []
 pillow = []
+platformdirs = []
 pydantic = []
 pydantic-core = []
 pygments = []
@@ -327,6 +400,8 @@ pyyaml = []
 rich = []
 shellingham = []
 six = []
+tomli = []
 typer = []
+types-pyyaml = []
 typing-extensions = []
 typing-inspection = []
