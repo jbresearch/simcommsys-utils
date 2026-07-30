@@ -64,7 +64,7 @@ class BuildSettingsSpec(BaseModel):
     # The directory where Simcommsys binaries will be installed.
     # Normally this will be either a temporary folder (i.e. under /tmp) or
     # somewhere on the computational node's local storage.
-    # Must be specified, and must be in your path.
+    # Must be specified, and is usually in your path (but doesn't have to be).
     install_dir: Path
     # The source URL for Simcommsys.
     # Defaults to the official public repository, but can be set manually to the
