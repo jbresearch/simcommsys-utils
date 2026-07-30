@@ -7,18 +7,15 @@ Simcommsys rather than directly interacting with the binaries.
 
 ## Prerequisites
 
-This package requires Python and the [Poetry](https://python-poetry.org) build
-system in order to run. Supported versions are:
-* Python 3.10 or later
-* Poetry 1.8.2 or later
-These can be installed on Ubuntu (22.04 or later) from the standard repos using:
+The reference platform for `simcommsys-utils` is the same as for `simcommsys`,
+that is, an Ubuntu 24.04 LTS (64-bit) server system. In addition to the
+`simcommsys` requirements, the following packages are also necessary:
 
-```bash
-apt-get install python3 python3-poetry
-```
+- Python (`python3`)
+- [Poetry](https://python-poetry.org) (`python3-poetry`)
 
-As for the main Simcommsys software, the main target platform is the latest LTS
-version of Ubuntu.
+These are all available as packages on the standard Ubuntu repositories.
+Support for Ubuntu 22.04 LTS is also currently maintained.
 
 ## Installation
 
