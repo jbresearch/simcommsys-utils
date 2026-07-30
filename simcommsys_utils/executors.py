@@ -25,7 +25,9 @@ from enum import Enum
 from typing import Any
 
 from simcommsys_utils.commands import (
+    _critical_wrap,
     _get_build_cmd,
+    _get_checkout_cmd,
     _get_local_cmd,
     _get_masterslave_cmd,
     _get_slurm_cmd,
@@ -75,7 +77,10 @@ def _run_build_cmd(
 exec 3>&1 # save original stdout
 exec 1>&2 # redirect stdout to stderr for logging
 # do the actual build
-{_get_build_cmd(build_settings, build_target, workers)}
+{_critical_wrap('\n'.join(
+        [_get_checkout_cmd(build_settings),
+         _get_build_cmd(build_settings, build_target, workers)]),
+        build_settings.working_dir)}
 # print binary filename to original stdout
 echo "$BINARY_FILENAME" >&3
 exec 3>&- # close original stdout

@@ -23,6 +23,35 @@ from simcommsys_utils.models import SimcommsysBuildSettings, SimcommsysJob
 # internal helper methods
 
 
+def _get_checkout_cmd(
+    build_settings: SimcommsysBuildSettings,
+) -> str:
+    """
+    Return commands to build simcommsys binaries in a parallel-safe way.
+    """
+
+    # command sequence to check out simcommsys
+    cmd = f"""
+# Clone the repo and build the binaries
+if [ -d {build_settings.working_dir}/.git/ ]; then
+    echo Existing working copy found, updating
+    git -C {build_settings.working_dir} fetch origin
+else
+    echo No working copy found, initializing new one
+    git -C {build_settings.working_dir} init
+    git -C {build_settings.working_dir} remote add origin {build_settings.simcommsys_repo}
+    git -C {build_settings.working_dir} fetch origin
+fi
+echo Checking out {build_settings.simcommsys_branch}
+git -C {build_settings.working_dir} checkout {build_settings.simcommsys_branch}
+echo Updating to the latest version of {build_settings.simcommsys_branch}
+git -C {build_settings.working_dir} reset --hard origin/{build_settings.simcommsys_branch}
+echo Removing any extraneous files
+git -C {build_settings.working_dir} clean -fde LOCK
+"""
+    return cmd
+
+
 def _get_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
@@ -49,36 +78,12 @@ def _get_build_cmd(
         build_args.append("USE_CUDA=0")
     # command sequence to check out, build, and install the target
     cmd = f"""
-# Make sure work directory exists
-mkdir -p {build_settings.working_dir}
-## CRITICAL SECTION START
-exec {{lock_fd}}>"{build_settings.working_dir}/LOCK" # open file descriptor for lock
-flock -x "$lock_fd" # acquire the lock
-# Clone the repo and build the binaries
-if [ -d {build_settings.working_dir}/.git/ ]; then
-    echo Existing working copy found, updating
-    git -C {build_settings.working_dir} fetch origin
-else
-    echo No working copy found, initializing new one
-    git -C {build_settings.working_dir} init
-    git -C {build_settings.working_dir} remote add origin {build_settings.simcommsys_repo}
-    git -C {build_settings.working_dir} fetch origin
-fi
-echo Checking out {build_settings.simcommsys_branch}
-git -C {build_settings.working_dir} checkout {build_settings.simcommsys_branch}
-echo Updating to the latest version of {build_settings.simcommsys_branch}
-git -C {build_settings.working_dir} reset --hard origin/{build_settings.simcommsys_branch}
-echo Removing any extraneous files
-git -C {build_settings.working_dir} clean -fde LOCK
+# Build process
 echo "Building binaries into {build_settings.install_dir}..."
 make --no-print-directory -C {build_settings.working_dir} {" ".join(build_args)} {build_target}
 echo Done building binaries
 BINARY_FILENAME=$(make --no-print-directory -C {build_settings.working_dir} {" ".join(build_args[2:])} DOTARGET=showfinal {build_target} 2>/dev/null |tail -1)
 echo Binary filename: $BINARY_FILENAME
-## CRITICAL SECTION END
-rm -f "{build_settings.working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
-flock -u "$lock_fd" # release the lock
-exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
 """
     return cmd
 
@@ -115,6 +120,22 @@ def _get_simcommsys_cmd(
 # helper methods used by clients
 
 
+def _critical_wrap(cmd: str, working_dir: Path) -> str:
+    wrapped_cmd = f"""
+# Make sure work directory exists
+mkdir -p {working_dir}
+## CRITICAL SECTION START
+exec {{lock_fd}}>"{working_dir}/LOCK" # open file descriptor for lock
+flock -x "$lock_fd" # acquire the lock
+{cmd}
+## CRITICAL SECTION END
+rm -f "{working_dir}/LOCK" # first remove the file (unlinks with file descriptor)
+flock -u "$lock_fd" # release the lock
+exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
+"""
+    return wrapped_cmd
+
+
 def _safe_wrap(cmd: str) -> str:
     wrapped_cmd = f"""
 #!/bin/bash
@@ -122,6 +143,7 @@ set -euo pipefail
 {cmd}
 """
     return wrapped_cmd
+
 
 # main methods used by clients
 
@@ -226,7 +248,10 @@ def _get_slurm_cmd(
 
     # build command to submit to SLURM.
     cmd = f"""
-{_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)}
+{_critical_wrap(
+        [_get_checkout_cmd(build_settings),
+         _get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)],
+        build_settings.working_dir)}
 {_get_simcommsys_cmd("$BINARY_FILENAME", job)}
 """
     return cmd
@@ -247,7 +272,10 @@ def _get_slurm_masterslave_cmd(
 
     # build command to submit to SLURM.
     cmd = f"""
-{_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)}
+{_critical_wrap(
+        [_get_checkout_cmd(build_settings),
+         _get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)],
+        build_settings.working_dir)}
 {_get_masterslave_cmd("$BINARY_FILENAME", job, port, update_port_if_in_use, workers, None)}
 """
     return cmd
