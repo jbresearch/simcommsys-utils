@@ -252,31 +252,37 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         Run a command as a slurm job using --wrap
         """
 
-        # build sbatch command for this job
+        # determine node to use in this job
         nodename = nodelist[node_index] if nodelist else None
-        cmd = str("sbatch " +
-                  f"--job-name={job_name} " +
-                  f"--partition={partition} " +
-                  f"--account={self.account} " +
-                  (f"--nodelist={nodename} " if nodename else "") +
-                  f"--output={job_logfile} " +
-                  f"--error={job_logfile} " +
-                  f"--mail-user={self.email} " +
-                  f"--mail-type=all " +
-                  f"--ntasks=1 " +
-                  f"--cpus-per-task={cpus_per_task} " +
-                  f"--mem-per-cpu={memlimit_gb}G " +
-                  (f"--gres={gres} " if gres else "") +
-                  f"--time={timeout_mins} " +
-                  f"--wrap='{wrapped_command}'")
+        # build sbatch script for this job
+        script = f"""#!/bin/bash
+# job parameters
+#SBATCH --job-name={job_name}
+#SBATCH --account={self.account}
+#SBATCH --partition={partition}
+{f"#SBATCH --nodelist={nodename}" if nodename else ""}
+# resources required
+#SBATCH --time={timeout_mins}
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task={cpus_per_task}
+#SBATCH --mem-per-cpu={memlimit_gb}G
+{f"#SBATCH --gres={gres}" if gres else ""}
+# log output
+#SBATCH --output={job_logfile}
+#SBATCH --error={job_logfile}
+# email user with progress
+#SBATCH --mail-user={self.email}
+#SBATCH --mail-type=all
+
+{wrapped_command}
+"""
 
         if dry_run:
-            logging.info(f"DRY RUN: {cmd}")
+            logging.info(f"DRY RUN: sbatch << {wrapped_command}")
         else:
-            logging.debug(f"RUN: {cmd}")
-            subprocess.run(_safe_wrap(cmd),
-                           shell=True, executable="/bin/bash",
-                           check=self.cancel_on_failure)
+            logging.debug(f"RUN: sbatch << {wrapped_command}")
+            subprocess.run("sbatch", input=script, text=True,
+                           shell=True, check=self.cancel_on_failure)
 
     def run(  # type:ignore
         self,
