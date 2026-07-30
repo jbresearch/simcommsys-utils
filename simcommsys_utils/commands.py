@@ -138,7 +138,6 @@ exec {{lock_fd}}>&- # close the file descriptor, deleting the unlinked file
 
 def _safe_wrap(cmd: str) -> str:
     wrapped_cmd = f"""
-#!/bin/bash
 set -euo pipefail
 {cmd}
 """

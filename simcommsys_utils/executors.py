@@ -274,7 +274,7 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
 #SBATCH --mail-user={self.email}
 #SBATCH --mail-type=all
 
-{cmd}
+{_safe_wrap(cmd)}
 """
 
         if dry_run:
