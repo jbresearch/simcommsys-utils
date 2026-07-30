@@ -243,15 +243,14 @@ def _get_slurm_cmd(
     """
     Returns commands for a single simulation run in SLURM mode.
 
-    Note: this command first builds simcommsys, then runs the simulation.
+    Note: this command first builds simcommsys, then runs the simulation; it
+    assumes that the simcommsys repo is already checked out beforehand.
     """
 
     # build command to submit to SLURM.
     cmd = f"""
-{_critical_wrap(
-        [_get_checkout_cmd(build_settings),
-         _get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)],
-        build_settings.working_dir)}
+{_critical_wrap(_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1),
+                build_settings.working_dir)}
 {_get_simcommsys_cmd("$BINARY_FILENAME", job)}
 """
     return cmd
@@ -267,15 +266,15 @@ def _get_slurm_masterslave_cmd(
     """
     Returns commands for a single simulation run in SLURM master-slave mode.
 
-    Note: this command first builds simcommsys, then runs the simulation.
+    Note: this command first builds simcommsys, then runs the simulation; it
+    assumes that the simcommsys repo is already checked out beforehand.
     """
 
     # build command to submit to SLURM.
     cmd = f"""
-{_critical_wrap(
-        [_get_checkout_cmd(build_settings),
-         _get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1)],
-        build_settings.working_dir)}
-{_get_masterslave_cmd("$BINARY_FILENAME", job, port, update_port_if_in_use, workers, None)}
+{_critical_wrap(_get_build_cmd(build_settings, "SimCommsys/SimCommsys", 1),
+                build_settings.working_dir)}
+{_get_masterslave_cmd("$BINARY_FILENAME", job, port, update_port_if_in_use,
+                      workers, None)}
 """
     return cmd

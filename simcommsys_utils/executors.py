@@ -68,6 +68,22 @@ class SimcommsysExecutor(abc.ABC):
         raise NotImplementedError
 
 
+def _run_checkout_cmd(
+    build_settings: SimcommsysBuildSettings,
+) -> Path:
+    cmd = _critical_wrap(_get_checkout_cmd(build_settings),
+                         build_settings.working_dir)
+    logging.debug(f"CHECKOUT: {cmd}")
+    try:
+        subprocess.run(_safe_wrap(cmd),
+                       shell=True, executable="/bin/bash", check=True)
+    except subprocess.CalledProcessError as e:
+        logging.error("Checkout script failed with a non-zero exit code.")
+        logging.error(f"stdout was: {e.stdout}")
+        logging.error(f"stderr was: {e.stderr}")
+        exit(-1)
+
+
 def _run_build_cmd(
     build_settings: SimcommsysBuildSettings,
     build_target: str,
@@ -193,6 +209,7 @@ class MasterSlaveSimcommsysExecutor(SimcommsysExecutor):
         # first compile the simulator
         binary_filename = _run_build_cmd(
             build_settings, "SimCommsys/SimCommsys", workers)
+
         # start simulations
         for job in jobs:
             # build command to submit to shell.
@@ -272,9 +289,14 @@ class SlurmSimcommsysExecutor(SimcommsysExecutor):
         timeout_mins: int,
         nodelist: list[str] | None = None,
     ):
+        # preprocess arguments
         nodelist = nodelist.split(",") if isinstance(
             nodelist, str) else nodelist
 
+        # first checkout the simulator
+        _run_checkout_cmd(build_settings)
+
+        # start simulations
         index = 0
         for job in jobs:
             _run_slurm_args = dict(
@@ -325,9 +347,14 @@ class SlurmMasterSlaveSimcommsysExecutor(
         update_port_if_in_use: bool = False,
         workers: int | str,
     ):  # type: ignore
+        # preprocess arguments
         workers = _validate_param_as_int(workers, "workers")
         port = _validate_param_as_int(port, "port")
 
+        # first checkout the simulator
+        _run_checkout_cmd(build_settings)
+
+        # start simulations
         index = 0
         for job in jobs:
             self._run_slurm(
