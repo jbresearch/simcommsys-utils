@@ -47,7 +47,8 @@ git -C {build_settings.working_dir} checkout {build_settings.simcommsys_branch}
 echo Updating to the latest version of {build_settings.simcommsys_branch}
 git -C {build_settings.working_dir} reset --hard origin/{build_settings.simcommsys_branch}
 echo Removing any extraneous files
-git -C {build_settings.working_dir} clean -fde LOCK
+git -C {build_settings.working_dir} clean -fd -e '/LOCK' -e '/.nfs*'
+echo Done checking out {build_settings.simcommsys_branch}
 """
     return cmd
 
