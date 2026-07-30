@@ -122,9 +122,8 @@ def _get_simcommsys_cmd(
 
 def _critical_wrap(cmd: str, working_dir: Path) -> str:
     wrapped_cmd = f"""
-# Make sure work directory exists
-mkdir -p {working_dir}
 ## CRITICAL SECTION START
+mkdir -p {working_dir} # make sure work directory exists
 exec {{lock_fd}}>"{working_dir}/LOCK" # open file descriptor for lock
 flock -x "$lock_fd" # acquire the lock
 {cmd}
