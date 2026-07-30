@@ -89,11 +89,12 @@ def _run_build_cmd(
     build_target: str,
     workers: int
 ) -> Path:
+    newline = "\n"
     cmd = f"""
 exec 3>&1 # save original stdout
 exec 1>&2 # redirect stdout to stderr for logging
 # do the actual build
-{_critical_wrap('\n'.join(
+{_critical_wrap(newline.join(
         [_get_checkout_cmd(build_settings),
          _get_build_cmd(build_settings, build_target, workers)]),
         build_settings.working_dir)}
