@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simcommsys-utils"
-version = "0.2.0-rc3"
+version = "0.2.0-rc4"
 description = "A package that aids in building, running and plotting results from Simcommsys systems, timers and simulations."
 authors = [
     "Mark Mizzi <mark.mizzi@um.edu.mt>",
